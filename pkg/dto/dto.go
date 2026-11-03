@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/model"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/model"
 )
 
 var pinRegex = regexp.MustCompile(`^[0-9]{6}$`)

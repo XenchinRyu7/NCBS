@@ -9,15 +9,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/config"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/database"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/dto"
-	appmw "github.com/cbs-bank/enterprise-portfolio-api/internal/middleware"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/model"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/repository"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/service"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/config"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/database"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/dto"
+	appmw "github.com/cbs-bank/enterprise-portfolio-api/pkg/middleware"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/model"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/openapi"
 	"github.com/cbs-bank/enterprise-portfolio-api/pkg/problem"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/repository"
 	"github.com/cbs-bank/enterprise-portfolio-api/pkg/response"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/service"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -752,15 +753,15 @@ func ScalarDocsHandler(w http.ResponseWriter, r *http.Request) {
 </html>`))
 }
 
-// OpenAPISpecHandler serves the OpenAPI 3.1 YAML specification.
+// OpenAPISpecHandler serves the embedded OpenAPI 3.1 YAML specification.
 func OpenAPISpecHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
-	if data, err := os.ReadFile("docs/openapi.yaml"); err == nil {
+	if len(openapi.SpecYAML) > 0 {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(data)
+		_, _ = w.Write(openapi.SpecYAML)
 		return
 	}
-	if data, err := os.ReadFile("../docs/openapi.yaml"); err == nil {
+	if data, err := os.ReadFile("docs/openapi.yaml"); err == nil {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
 		return

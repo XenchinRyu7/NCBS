@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/database"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/model"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/repository"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/service"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/database"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/model"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/repository"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/service"
 	"github.com/cbs-bank/enterprise-portfolio-api/pkg/problem"
 	"github.com/go-chi/chi/v5/middleware"
 )

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/repository"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/repository"
 )
 
 func loginAs(t *testing.T, email string) string {

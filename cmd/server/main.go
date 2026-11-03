@@ -7,7 +7,7 @@ import (
 	"time"
 
 	handler "github.com/cbs-bank/enterprise-portfolio-api/api"
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/config"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/config"
 )
 
 func main() {

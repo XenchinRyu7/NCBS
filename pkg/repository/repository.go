@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/model"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/model"
 	"github.com/cbs-bank/enterprise-portfolio-api/pkg/response"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"

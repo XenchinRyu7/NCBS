@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cbs-bank/enterprise-portfolio-api/internal/config"
+	"github.com/cbs-bank/enterprise-portfolio-api/pkg/config"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 )

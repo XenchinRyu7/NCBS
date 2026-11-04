@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"database/sql"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,11 +13,88 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// SanitizePostgresURL normalizes Supabase connection strings for Go's lib/pq driver:
+//  1. Handles unencoded '@' characters inside the database password (splits on the last '@').
+//  2. Removes Prisma-only query parameters like 'pgbouncer=true' that lib/pq rejects.
+//  3. Adds 'sslmode=require' and 'binary_parameters=yes' (for Supabase Transaction Pooler port 6543).
+func SanitizePostgresURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	schemeIdx := strings.Index(raw, "://")
+	if schemeIdx == -1 {
+		return raw
+	}
+	scheme := raw[:schemeIdx]
+	rest := raw[schemeIdx+3:]
+
+	// Separate path/query from authority (user:pass@host:port)
+	slashIdx := strings.IndexByte(rest, '/')
+	authority := rest
+	pathAndQuery := ""
+	if slashIdx != -1 {
+		authority = rest[:slashIdx]
+		pathAndQuery = rest[slashIdx:]
+	}
+
+	// Split authority on the LAST '@' so passwords containing '@' (e.g. @CbsBankDb...) don't break host parsing
+	lastAt := strings.LastIndexByte(authority, '@')
+	hostPart := authority
+	var userInfo *url.Userinfo
+	if lastAt != -1 {
+		creds := authority[:lastAt]
+		hostPart = authority[lastAt+1:]
+		colonIdx := strings.IndexByte(creds, ':')
+		if colonIdx != -1 {
+			username := creds[:colonIdx]
+			password := creds[colonIdx+1:]
+			// Unescape first in case it was already %40 encoded, then re-encode cleanly
+			if decoded, err := url.PathUnescape(password); err == nil {
+				password = decoded
+			}
+			userInfo = url.UserPassword(username, password)
+		} else {
+			userInfo = url.User(creds)
+		}
+	}
+
+	pathPart := pathAndQuery
+	rawQuery := ""
+	if qIdx := strings.IndexByte(pathAndQuery, '?'); qIdx != -1 {
+		pathPart = pathAndQuery[:qIdx]
+		rawQuery = pathAndQuery[qIdx+1:]
+	}
+
+	q, _ := url.ParseQuery(rawQuery)
+	// Remove Prisma-only parameters that cause lib/pq to fail with "unrecognized configuration parameter"
+	q.Del("pgbouncer")
+	q.Del("connection_limit")
+	q.Del("pool_timeout")
+	if q.Get("sslmode") == "" {
+		q.Set("sslmode", "require")
+	}
+	if strings.Contains(hostPart, ":6543") && q.Get("binary_parameters") == "" {
+		q.Set("binary_parameters", "yes")
+	}
+
+	u := &url.URL{
+		Scheme:   scheme,
+		User:     userInfo,
+		Host:     hostPart,
+		Path:     pathPart,
+		RawQuery: q.Encode(),
+	}
+	return u.String()
+}
+
 // Store wraps both PostgreSQL and Redis clients along with a resilient fallback cache/rate-limiter
 // so the serverless binary can boot cleanly even before external credentials are provisioned.
 type Store struct {
-	DB    *sql.DB
-	Redis *redis.Client
+	DB          *sql.DB
+	DBLastError string
+	Redis       *redis.Client
 
 	mu          sync.RWMutex
 	memKV       map[string]memEntry
@@ -35,15 +114,18 @@ func New(cfg *config.Config) *Store {
 	}
 
 	if cfg.DatabaseURL != "" {
-		if db, err := sql.Open("postgres", cfg.DatabaseURL); err == nil {
+		cleanDSN := SanitizePostgresURL(cfg.DatabaseURL)
+		if db, err := sql.Open("postgres", cleanDSN); err == nil {
 			db.SetMaxOpenConns(10)
 			db.SetMaxIdleConns(5)
 			db.SetConnMaxLifetime(5 * time.Minute)
 			s.DB = db
+		} else {
+			s.DBLastError = err.Error()
 		}
 	}
 
-	if cfg.UpstashRedisURL != "" {
+	if cfg.UpstashRedisURL != "" && (strings.HasPrefix(cfg.UpstashRedisURL, "redis://") || strings.HasPrefix(cfg.UpstashRedisURL, "rediss://")) {
 		if opt, err := redis.ParseURL(cfg.UpstashRedisURL); err == nil {
 			s.Redis = redis.NewClient(opt)
 		}
@@ -57,10 +139,14 @@ func (s *Store) PingDB(ctx context.Context) string {
 	if s.DB == nil {
 		return "FALLBACK_MEMORY"
 	}
-	if err := s.DB.PingContext(ctx); err != nil {
-		return "DOWN"
+	pingCtx, cancel := context.WithTimeout(ctx, 4*time.Second)
+	defer cancel()
+	if err := s.DB.PingContext(pingCtx); err != nil {
+		s.DBLastError = err.Error()
+		return "DOWN (" + err.Error() + ")"
 	}
-	return "UP"
+	s.DBLastError = ""
+	return "UP (SUPABASE_POSTGRESQL_CONNECTED)"
 }
 
 // PingRedis checks Upstash Redis connectivity.

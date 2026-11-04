@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bufio"
 	"os"
 	"strconv"
 	"strings"
@@ -21,8 +22,39 @@ type Config struct {
 	DefaultRateLim      int
 }
 
+// loadDotEnv reads a local .env file if present without overriding already-set OS environment variables.
+func loadDotEnv() {
+	for _, path := range []string{".env", "../.env"} {
+		f, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			idx := strings.IndexByte(line, '=')
+			if idx <= 0 {
+				continue
+			}
+			key := strings.TrimSpace(line[:idx])
+			val := strings.TrimSpace(line[idx+1:])
+			val = strings.Trim(val, `"'`)
+			if os.Getenv(key) == "" {
+				_ = os.Setenv(key, val)
+			}
+		}
+		_ = f.Close()
+		break
+	}
+}
+
 // Load reads configuration from environment variables with enterprise defaults for cbs.api.saefulrohman.dev.
 func Load() *Config {
+	loadDotEnv()
+
 	rateLim := 60
 	if v := os.Getenv("DEFAULT_RATE_LIMIT"); v != "" {
 		if parsed, err := strconv.Atoi(v); err == nil && parsed > 0 {

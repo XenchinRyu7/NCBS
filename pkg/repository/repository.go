@@ -264,7 +264,7 @@ func (r *Repository) seedCoreBankingData() {
 
 	// 4. Seed Internal General Ledger Accounts & Customer Accounts
 	glVault := &model.Account{
-		ID:               "gl000000-0000-0000-0000-000000000001",
+		ID:               "00000000-0000-0000-0000-000000000901",
 		AccountNumber:    GLVaultAccountNo,
 		CustomerID:       systemCIF.ID,
 		OwnerName:        "GL Kas Utama & Cadangan Likuiditas Bank",
@@ -281,7 +281,7 @@ func (r *Repository) seedCoreBankingData() {
 		UpdatedAt:        now,
 	}
 	glNostro := &model.Account{
-		ID:               "gl000000-0000-0000-0000-000000000002",
+		ID:               "00000000-0000-0000-0000-000000000902",
 		AccountNumber:    GLNostroClearingNo,
 		CustomerID:       systemCIF.ID,
 		OwnerName:        "GL Nostro Settlement BI-FAST & RTGS Bank Indonesia",
@@ -298,7 +298,7 @@ func (r *Repository) seedCoreBankingData() {
 		UpdatedAt:        now,
 	}
 	glFeeIncome := &model.Account{
-		ID:               "gl000000-0000-0000-0000-000000000003",
+		ID:               "00000000-0000-0000-0000-000000000903",
 		AccountNumber:    GLFeeIncomeAccountNo,
 		CustomerID:       systemCIF.ID,
 		OwnerName:        "GL Pendapatan Fee Transaksi & Administrasi",
@@ -376,7 +376,7 @@ func (r *Repository) seedCoreBankingData() {
 	}
 
 	// 5. Record Balanced Genesis Double-Entry Ledger Postings for Initial Account Funding
-	genesisTxID := "tx000000-0000-0000-0000-000000000001"
+	genesisTxID := "10000000-0000-0000-0000-000000000001"
 	refGenesis := "NCB-GENESIS-OPENING-001"
 	totalInitial := int64(500_000_000 + 75_000_000 + 250_000_000)
 
@@ -461,7 +461,7 @@ func (r *Repository) seedCoreBankingData() {
 	// 6. Seed Active Virtual Account Bill (88000081290001001)
 	vaExp := now.Add(24 * time.Hour)
 	r.virtualAccounts["88000081290001001"] = &model.VirtualAccount{
-		ID:                "va000000-0000-0000-0000-000000000001",
+		ID:                "b0000000-0000-0000-0000-000000000001",
 		VANumber:          "88000081290001001",
 		MerchantName:      merchant.FullName,
 		MerchantAccountID: accMerchant.ID,
@@ -474,6 +474,10 @@ func (r *Repository) seedCoreBankingData() {
 		Status:            model.VAOpen,
 		ExpiresAt:         vaExp,
 		CreatedAt:         now,
+	}
+
+	if r.db != nil {
+		go r.syncSeedToPostgres()
 	}
 }
 
@@ -1667,6 +1671,55 @@ func (r *Repository) GetAdminDashboardMetrics(ctx context.Context) map[string]in
 	}
 }
 
+// syncSeedToPostgres ensures all genesis customers, accounts, and virtual accounts exist in Supabase PostgreSQL.
+func (r *Repository) syncSeedToPostgres() {
+	if r.db == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+
+	r.mu.RLock()
+	customers := make([]*model.Customer, 0, len(r.customers))
+	for _, c := range r.customers {
+		cp := *c
+		customers = append(customers, &cp)
+	}
+	accounts := make([]*model.Account, 0, len(r.accounts))
+	for _, a := range r.accounts {
+		cp := *a
+		accounts = append(accounts, &cp)
+	}
+	r.mu.RUnlock()
+
+	for _, c := range customers {
+		_, _ = r.db.ExecContext(ctx, `
+			INSERT INTO customers (id, cif_number, nik_encrypted, full_name, email, phone_number, password_hash, role, kyc_status, is_active, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			ON CONFLICT (email) DO NOTHING`,
+			c.ID, c.CIFNumber, c.NIKEncrypted, c.FullName, c.Email, c.PhoneNumber,
+			c.PasswordHash, c.Role, c.KYCStatus, c.IsActive, c.CreatedAt, c.UpdatedAt,
+		)
+	}
+	for _, a := range accounts {
+		var custEmail string
+		for _, c := range customers {
+			if c.ID == a.CustomerID {
+				custEmail = c.Email
+				break
+			}
+		}
+		_, _ = r.db.ExecContext(ctx, `
+			INSERT INTO accounts (id, account_number, customer_id, account_type, card_tier, currency, balance, hold_balance, daily_limit, pin_hash, pin_failed_attempts, status, version, created_at, updated_at)
+			VALUES ($1, $2, COALESCE((SELECT id FROM customers WHERE email = $16), $3::uuid), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+			ON CONFLICT (account_number) DO NOTHING`,
+			a.ID, a.AccountNumber, a.CustomerID, a.AccountType, a.CardTier, a.Currency,
+			a.Balance, a.HoldBalance, a.DailyLimit, a.PINHash, a.PINFailedAttempts,
+			a.Status, a.Version, a.CreatedAt, a.UpdatedAt, custEmail,
+		)
+	}
+}
+
 // persistCustomerAndAccountToPostgres writes newly created Customer and Account rows to Supabase PostgreSQL when r.db != nil.
 func (r *Repository) persistCustomerAndAccountToPostgres(ctx context.Context, cust *model.Customer, acc *model.Account) {
 	if r.db == nil {
@@ -1710,16 +1763,16 @@ func (r *Repository) persistTxAndPostingsToPostgres(ctx context.Context, txRecor
 		}
 		_, _ = sqlTx.ExecContext(ctx, `
 			UPDATE accounts SET balance = $1, hold_balance = $2, pin_failed_attempts = $3, status = $4, version = $5, updated_at = $6
-			WHERE id = $7`,
-			acc.Balance, acc.HoldBalance, acc.PINFailedAttempts, acc.Status, acc.Version, acc.UpdatedAt, acc.ID,
+			WHERE account_number = $7`,
+			acc.Balance, acc.HoldBalance, acc.PINFailedAttempts, acc.Status, acc.Version, acc.UpdatedAt, acc.AccountNumber,
 		)
 	}
 
 	_, _ = sqlTx.ExecContext(ctx, `
 		INSERT INTO transactions (id, reference_no, idempotency_key, source_account_id, destination_account_id, external_bank_code, external_account_no, external_account_name, channel, amount, fee_amount, total_debit, currency, description, status, client_ip, trace_id, settled_at, created_at)
-		VALUES ($1, $2, $3, NULLIF($4, '')::uuid, NULLIF($5, '')::uuid, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+		VALUES ($1, $2, $3, (SELECT id FROM accounts WHERE account_number = $4), (SELECT id FROM accounts WHERE account_number = $5), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 		ON CONFLICT (idempotency_key) DO NOTHING`,
-		txRecord.ID, txRecord.ReferenceNo, txRecord.IdempotencyKey, txRecord.SourceAccountID, txRecord.DestinationAccountID,
+		txRecord.ID, txRecord.ReferenceNo, txRecord.IdempotencyKey, txRecord.SourceAccountNo, txRecord.DestinationAccountNo,
 		txRecord.ExternalBankCode, txRecord.ExternalAccountNo, txRecord.ExternalAccountName, txRecord.Channel,
 		txRecord.Amount, txRecord.FeeAmount, txRecord.TotalDebit, txRecord.Currency, txRecord.Description,
 		txRecord.Status, txRecord.ClientIP, txRecord.TraceID, txRecord.SettledAt, txRecord.CreatedAt,
@@ -1728,9 +1781,9 @@ func (r *Repository) persistTxAndPostingsToPostgres(ctx context.Context, txRecor
 	for _, p := range postings {
 		_, _ = sqlTx.ExecContext(ctx, `
 			INSERT INTO ledger_entries (id, transaction_id, account_id, direction, amount, balance_before, balance_after, narration, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			VALUES ($1, $2, (SELECT id FROM accounts WHERE account_number = $3), $4, $5, $6, $7, $8, $9)
 			ON CONFLICT (id) DO NOTHING`,
-			p.ID, p.TransactionID, p.AccountID, p.Direction, p.Amount, p.BalanceBefore, p.BalanceAfter, p.Narration, p.CreatedAt,
+			p.ID, p.TransactionID, p.AccountNumber, p.Direction, p.Amount, p.BalanceBefore, p.BalanceAfter, p.Narration, p.CreatedAt,
 		)
 	}
 
@@ -1813,10 +1866,16 @@ func (r *Repository) RecordAuditLog(ctx context.Context, entry model.AuditLog) {
 
 	if r.db != nil {
 		payloadJSON, _ := json.Marshal(entry.PayloadSnapshot)
+		var actorUUID interface{}
+		if entry.ActorID != nil {
+			if _, err := uuid.Parse(*entry.ActorID); err == nil {
+				actorUUID = *entry.ActorID
+			}
+		}
 		_, _ = r.db.ExecContext(ctx, `
 			INSERT INTO audit_logs (id, actor_id, action, resource_name, resource_id, ip_address, trace_id, payload_snapshot, created_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-			entry.ID, entry.ActorID, entry.Action, entry.ResourceName, entry.ResourceID, entry.IPAddress, entry.TraceID, payloadJSON, entry.CreatedAt,
+			entry.ID, actorUUID, entry.Action, entry.ResourceName, entry.ResourceID, entry.IPAddress, entry.TraceID, payloadJSON, entry.CreatedAt,
 		)
 	}
 }

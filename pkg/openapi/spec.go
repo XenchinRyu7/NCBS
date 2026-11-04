@@ -7,3 +7,8 @@ import _ "embed"
 //go:embed openapi.yaml
 var SpecYAML []byte
 
+// PostmanJSON holds the embedded Postman Collection v2.1 JSON pre-configured for the /trial/v1 Sandbox.
+//
+//go:embed postman.json
+var PostmanJSON []byte
+

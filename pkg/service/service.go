@@ -691,3 +691,18 @@ func (s *Service) GetTransactionByReference(ctx context.Context, referenceNo, ac
 func (s *Service) GetAdminDashboardMetrics(ctx context.Context) map[string]interface{} {
 	return s.repo.GetAdminDashboardMetrics(ctx)
 }
+
+// ResetSandboxState resets all Trial/Sandbox demo accounts, balances, VAs, and General Ledger entries back to genesis state.
+func (s *Service) ResetSandboxState(ctx context.Context, clientIP, traceID string) {
+	s.repo.ResetSandboxState()
+	s.repo.RecordAuditLog(ctx, model.AuditLog{
+		Action:       model.AuditUpdate,
+		ResourceName: "trial_sandbox_environment",
+		ResourceID:   "GENESIS_RESET",
+		IPAddress:    clientIP,
+		TraceID:      traceID,
+		PayloadSnapshot: map[string]interface{}{
+			"event": "Sandbox balances and Virtual Accounts restored to clean initial state",
+		},
+	})
+}

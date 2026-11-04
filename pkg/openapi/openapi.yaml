@@ -16,8 +16,14 @@ info:
     - **Multi-Rail Clearing Engine**: **Intrabank Overbooking** (Rp 0 fee), **BI-FAST** (Rp 2.500 fee), **RTGS** (Rp 30.000 fee), **LLG/SKNBI** (Rp 2.900 fee), **Teller Cash Deposit/Withdrawal**, and **Virtual Account Settlement**.
     - **6-Digit PIN & Brute-Force Lockout**: Automatic `PIN_BLOCKED` status after 3 consecutive invalid PIN attempts; unblockable by `CUSTOMER_SERVICE`.
 servers:
-  - url: /
-    description: Current Environment (Vercel Edge / Local Core Banking Server)
+  - url: /trial
+    description: Trial / Playground Sandbox Environment (/trial/v1) — Active for Demo & Postman Testing
+  - url: /dev
+    description: Developer Sandbox Environment (/dev/v1)
+  - url: https://cbs.api.saefulrohman.dev/trial
+    description: Remote Trial Sandbox (cbs.api.saefulrohman.dev/trial/v1)
+  - url: https://cbs.api.saefulrohman.dev
+    description: Live Production Core Ledger (/v1) — Rejects cbs_trial_* Sandbox Keys
 security:
   - ApiKeyAuth: []
 paths:
@@ -28,6 +34,14 @@ paths:
       responses:
         "200":
           description: Core Banking System and General Ledger are healthy
+  /v1/system/reset:
+    post:
+      tags: [System & Ledger Integrity]
+      summary: Reset Trial/Dev Sandbox Ledger to Clean Genesis State (/trial/v1/system/reset)
+      description: Exclusive to `/trial/v1` and `/dev/v1`. Restores all demo account balances, Virtual Accounts, and General Ledger entries to their initial state.
+      responses:
+        "200":
+          description: Trial Sandbox environment reset successfully
   /v1/auth/roles:
     get:
       tags: [Zero-Trust Auth & RBAC Roles]
@@ -522,7 +536,7 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: SNAP-BI Sandbox Partner Key (`cbs_live_snap_sandbox_2026`)
+      description: SNAP-BI Partner Key (`cbs_trial_snap_sandbox_2026` for `/trial/v1` & `/dev/v1`, or `cbs_live_snap_sandbox_2026` for `/v1` Production)
     BearerAuth:
       type: http
       scheme: bearer

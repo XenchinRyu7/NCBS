@@ -36,6 +36,9 @@ var (
 // DemoSandboxRawKey is the pre-provisioned SNAP-BI Open Banking Sandbox Key.
 const DemoSandboxRawKey = "cbs_live_snap_sandbox_2026"
 
+// TrialSandboxRawKey is the dedicated Trial/Playground API Key for /trial/v1 and /dev/v1.
+const TrialSandboxRawKey = "cbs_trial_snap_sandbox_2026"
+
 // Internal General Ledger Account Numbers
 const (
 	GLVaultAccountNo     = "1001000001" // GL Kas Utama / Central Reserve Vault
@@ -87,17 +90,44 @@ func New(db *sql.DB, apiKeySalt string) *Repository {
 	return r
 }
 
+// ResetSandboxState restores all pre-seeded Trial/Sandbox accounts, balances, VAs, and General Ledger entries to their clean genesis state.
+func (r *Repository) ResetSandboxState() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.customers = make(map[string]*model.Customer)
+	r.customersByMail = make(map[string]string)
+	r.accounts = make(map[string]*model.Account)
+	r.accountsByID = make(map[string]*model.Account)
+	r.transactions = nil
+	r.ledgerEntries = nil
+	r.virtualAccounts = make(map[string]*model.VirtualAccount)
+	r.apiKeys = make(map[string]model.APIKey)
+	r.auditLogs = nil
+	r.seedCoreBankingData()
+}
+
 func (r *Repository) seedCoreBankingData() {
 	now := time.Now().UTC()
 
-	// 1. Seed Sandbox API Key (SNAP-BI Partner)
+	// 1. Seed Sandbox API Keys (SNAP-BI Partner & Trial Playground)
 	demoHash := r.HashAPIKey(DemoSandboxRawKey)
+	trialHash := r.HashAPIKey(TrialSandboxRawKey)
 	exp := now.Add(365 * 24 * time.Hour)
 	r.apiKeys[demoHash] = model.APIKey{
 		ID:              "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
 		PartnerName:     "SNAP-BI Open Banking Playground Partner",
 		KeyHash:         demoHash,
 		Prefix:          "cbs_live_",
+		RateLimitPerMin: 120,
+		IsActive:        true,
+		ExpiresAt:       &exp,
+		CreatedAt:       now,
+	}
+	r.apiKeys[trialHash] = model.APIKey{
+		ID:              "d4eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
+		PartnerName:     "API Playground Trial Environment Key (playground.api.saefulrohman.dev)",
+		KeyHash:         trialHash,
+		Prefix:          "cbs_trial_",
 		RateLimitPerMin: 120,
 		IsActive:        true,
 		ExpiresAt:       &exp,

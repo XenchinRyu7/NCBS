@@ -349,3 +349,59 @@ func TestTellerCashAndAuditorTrialBalanceInvariant(t *testing.T) {
 		t.Fatalf("expected 200 OK on /v1/transactions, got %d", recTxs.Code)
 	}
 }
+
+func TestTrialSandboxRoutesAndOriginWhitelistGuard(t *testing.T) {
+	// 1. Authorized Origin (https://playground.api.saefulrohman.dev) on /trial/v1/accounts/5240301001/balance with Trial Key
+	reqTrial := httptest.NewRequest(http.MethodGet, "/trial/v1/accounts/5240301001/balance", nil)
+	reqTrial.Header.Set("Origin", "https://playground.api.saefulrohman.dev")
+	reqTrial.Header.Set("X-API-Key", repository.TrialSandboxRawKey)
+	recTrial := httptest.NewRecorder()
+	Handler(recTrial, reqTrial)
+
+	if recTrial.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK on /trial/v1 with Trial Key & playground origin, got %d: %s", recTrial.Code, recTrial.Body.String())
+	}
+	if recTrial.Header().Get("X-CBS-Environment") != "TRIAL_SANDBOX" {
+		t.Fatalf("expected X-CBS-Environment=TRIAL_SANDBOX, got %q", recTrial.Header().Get("X-CBS-Environment"))
+	}
+
+	// 2. Trial Key (cbs_trial_*) MUST be rejected on Production route (/v1/...) with 403 Environment Mismatch
+	reqProdWithTrialKey := httptest.NewRequest(http.MethodGet, "/v1/accounts/5240301001/balance", nil)
+	reqProdWithTrialKey.Header.Set("Origin", "https://playground.api.saefulrohman.dev")
+	reqProdWithTrialKey.Header.Set("X-API-Key", repository.TrialSandboxRawKey)
+	recProd := httptest.NewRecorder()
+	Handler(recProd, reqProdWithTrialKey)
+
+	if recProd.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden when using Trial Key on Production /v1 route, got %d: %s", recProd.Code, recProd.Body.String())
+	}
+
+	// 3. Unauthorized Browser Origin (https://unauthorized-hacker.com) MUST be rejected with 403 Forbidden
+	reqBadOrigin := httptest.NewRequest(http.MethodGet, "/trial/v1/system/health", nil)
+	reqBadOrigin.Header.Set("Origin", "https://unauthorized-hacker.com")
+	recBadOrigin := httptest.NewRecorder()
+	Handler(recBadOrigin, reqBadOrigin)
+
+	if recBadOrigin.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for unauthorized Origin header, got %d: %s", recBadOrigin.Code, recBadOrigin.Body.String())
+	}
+
+	// 4. Reset Sandbox State via POST /trial/v1/system/reset
+	reqReset := httptest.NewRequest(http.MethodPost, "/trial/v1/system/reset", nil)
+	reqReset.Header.Set("Origin", "https://playground.api.saefulrohman.dev")
+	reqReset.Header.Set("X-API-Key", repository.TrialSandboxRawKey)
+	recReset := httptest.NewRecorder()
+	Handler(recReset, reqReset)
+
+	if recReset.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK on POST /trial/v1/system/reset, got %d: %s", recReset.Code, recReset.Body.String())
+	}
+
+	// 5. Verify GET /postman.json serves the Postman Collection JSON
+	reqPostman := httptest.NewRequest(http.MethodGet, "/postman.json", nil)
+	recPostman := httptest.NewRecorder()
+	Handler(recPostman, reqPostman)
+	if recPostman.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK on GET /postman.json, got %d", recPostman.Code)
+	}
+}

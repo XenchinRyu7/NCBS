@@ -51,90 +51,48 @@ func NewRouter() *chi.Mux {
 	r.Use(appmw.StructuredLogger)
 	r.Use(chimw.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   cfg.AllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Idempotency-Key", "X-API-Key", "X-Request-ID"},
-		ExposedHeaders:   []string{"X-RateLimit-Limit", "X-RateLimit-Remaining", "X-Request-ID", "X-Cache-Hit"},
+		ExposedHeaders:   []string{"X-RateLimit-Limit", "X-RateLimit-Remaining", "X-Request-ID", "X-Cache-Hit", "X-CBS-Environment"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+	r.Use(appmw.OriginWhitelistGuard(cfg.AllowedOrigins, cfg.StrictOriginGuard))
 	r.Use(appmw.SlidingWindowRateLimit(store, repo, cfg.DefaultRateLim))
 
 	// Root & Interactive OpenAPI Playground Routes
 	r.Get("/", RootWelcomeHandler)
 	r.Get("/docs", ScalarDocsHandler)
 	r.Get("/openapi.yaml", OpenAPISpecHandler)
+	r.Get("/postman.json", PostmanCollectionHandler)
 
-	// Core Banking System v1 Routes
+	// 1. Production Core Banking Route (/v1)
 	r.Route("/v1", func(v1 chi.Router) {
-		// 1. System & Ledger Integrity Health Check
-		v1.Get("/system/health", HealthCheckHandler)
+		v1.Use(appmw.EnvironmentScope("PRODUCTION"))
+		mountCoreBankingRoutes(v1, false)
+	})
 
-		// 2. Zero-Trust Authentication, Role Directory & SNAP-BI Partner Keys
-		v1.Post("/auth/token", IssueTokenHandler)
-		v1.Post("/auth/refresh", RotateRefreshTokenHandler)
-		v1.Post("/auth/sandbox-key", GenerateSandboxKeyHandler)
-		v1.Get("/auth/roles", ListRolesMatrixHandler)
-
-		// 3. CIF & Customer Onboarding (Idempotent)
-		v1.With(appmw.Idempotency(store)).Post("/customers/onboard", OnboardCustomerHandler)
-
-		// 4. Authenticated Core Banking Operations (All Valid Roles)
-		v1.Group(func(auth chi.Router) {
-			auth.Use(appmw.RequireRoles(
-				svc, repo,
-				model.RoleCustomer, model.RoleMerchant, model.RoleTeller,
-				model.RoleCustomerService, model.RoleAuditor, model.RoleAdmin,
-			))
-
-			// Current Identity, Permissions & Owned Accounts
-			auth.Get("/auth/me", GetAuthMeHandler)
-
-			// Accounts, Balance Inquiry & Mutation Statement (Customers see own; Staff see all)
-			auth.Get("/accounts", ListAccountsHandler)
-			auth.With(appmw.Idempotency(store)).Post("/accounts", OpenAdditionalAccountHandler)
-			auth.Get("/accounts/{accountNumber}/balance", GetAccountBalanceHandler)
-			auth.Get("/accounts/{accountNumber}/statement", GetAccountStatementHandler)
-
-			// Transaction History & Receipt Lookup (Customers see own; Staff see all)
-			auth.Get("/transactions", ListTransactionsHandler)
-			auth.Get("/transactions/{referenceNo}", GetTransactionByReferenceHandler)
-
-			// Virtual Account Inquiry (Public to all authenticated users)
-			auth.Get("/virtual-accounts/{vaNumber}", GetVirtualAccountHandler)
-		})
-
-		// 5. Customer & Merchant Transactional Operations (Transfer & VA Payment)
-		v1.Group(func(txGroup chi.Router) {
-			txGroup.Use(appmw.RequireRoles(svc, repo, model.RoleCustomer, model.RoleMerchant, model.RoleAdmin))
-			txGroup.With(appmw.Idempotency(store)).Post("/transactions/transfer", ExecuteTransferHandler)
-			txGroup.With(appmw.Idempotency(store)).Post("/virtual-accounts/{vaNumber}/pay", PayVirtualAccountHandler)
-		})
-
-		// 6. Corporate Merchant Virtual Account Billing Creation (MERCHANT or ADMIN)
-		v1.With(appmw.RequireRoles(svc, repo, model.RoleMerchant, model.RoleAdmin)).
-			Post("/virtual-accounts", CreateVirtualAccountHandler)
-
-		// 7. Teller Branch Cash Operations — Deposit & Withdrawal (TELLER or ADMIN)
-		v1.With(
-			appmw.RequireRoles(svc, repo, model.RoleTeller, model.RoleAdmin),
-			appmw.Idempotency(store),
-		).Post("/transactions/cash", ExecuteCashTransactionHandler)
-
-		// 8. Customer Service & Admin Account Lifecycle — Unblock PIN & Freeze/Activate Account
-		v1.Group(func(cs chi.Router) {
-			cs.Use(appmw.RequireRoles(svc, repo, model.RoleCustomerService, model.RoleAdmin))
-			cs.Post("/accounts/{accountNumber}/unblock-pin", UnblockAccountPINHandler)
-			cs.Patch("/accounts/{accountNumber}/status", UpdateAccountStatusHandler)
-		})
-
-		// 9. Executive Admin Command Center, General Ledger Trial Balance & OJK Audit Trail (AUDITOR or ADMIN)
-		v1.Group(func(audit chi.Router) {
-			audit.Use(appmw.RequireRoles(svc, repo, model.RoleAuditor, model.RoleAdmin))
-			audit.Get("/admin/dashboard", GetAdminDashboardHandler)
-			audit.Get("/ledger/trial-balance", GetTrialBalanceHandler)
-			audit.Get("/audit-logs", ListAuditLogsHandler)
-		})
+	// 2. Dedicated Trial / Playground Sandbox Routes (/trial/v1, /trial, /dev/v1, /dev, /sandbox/v1)
+	r.Route("/trial/v1", func(tr chi.Router) {
+		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		mountCoreBankingRoutes(tr, true)
+	})
+	r.Route("/trial", func(tr chi.Router) {
+		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		mountCoreBankingRoutes(tr, true)
+	})
+	r.Route("/dev/v1", func(dv chi.Router) {
+		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX"))
+		mountCoreBankingRoutes(dv, true)
+	})
+	r.Route("/dev", func(dv chi.Router) {
+		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX"))
+		mountCoreBankingRoutes(dv, true)
+	})
+	r.Route("/sandbox/v1", func(sb chi.Router) {
+		sb.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		mountCoreBankingRoutes(sb, true)
 	})
 
 	// RFC 7807 Not Found & Method Not Allowed Handlers
@@ -150,6 +108,83 @@ func NewRouter() *chi.Mux {
 	return r
 }
 
+func mountCoreBankingRoutes(v1 chi.Router, isSandbox bool) {
+	// 1. System & Ledger Integrity Health Check
+	v1.Get("/system/health", HealthCheckHandler)
+	v1.Get("/health", HealthCheckHandler)
+	if isSandbox {
+		// Exclusive Sandbox Reset Endpoint (/trial/v1/system/reset or /dev/v1/system/reset)
+		v1.Post("/system/reset", ResetSandboxHandler)
+	}
+
+	// 2. Zero-Trust Authentication, Role Directory & SNAP-BI Partner Keys
+	v1.Post("/auth/token", IssueTokenHandler)
+	v1.Post("/auth/refresh", RotateRefreshTokenHandler)
+	v1.Post("/auth/sandbox-key", GenerateSandboxKeyHandler)
+	v1.Get("/auth/sandbox-key", GenerateSandboxKeyHandler)
+	v1.Get("/auth/roles", ListRolesMatrixHandler)
+
+	// 3. CIF & Customer Onboarding (Idempotent)
+	v1.With(appmw.Idempotency(store)).Post("/customers/onboard", OnboardCustomerHandler)
+
+	// 4. Authenticated Core Banking Operations (All Valid Roles)
+	v1.Group(func(auth chi.Router) {
+		auth.Use(appmw.RequireRoles(
+			svc, repo,
+			model.RoleCustomer, model.RoleMerchant, model.RoleTeller,
+			model.RoleCustomerService, model.RoleAuditor, model.RoleAdmin,
+		))
+
+		// Current Identity, Permissions & Owned Accounts
+		auth.Get("/auth/me", GetAuthMeHandler)
+
+		// Accounts, Balance Inquiry & Mutation Statement (Customers see own; Staff see all)
+		auth.Get("/accounts", ListAccountsHandler)
+		auth.With(appmw.Idempotency(store)).Post("/accounts", OpenAdditionalAccountHandler)
+		auth.Get("/accounts/{accountNumber}/balance", GetAccountBalanceHandler)
+		auth.Get("/accounts/{accountNumber}/statement", GetAccountStatementHandler)
+
+		// Transaction History & Receipt Lookup (Customers see own; Staff see all)
+		auth.Get("/transactions", ListTransactionsHandler)
+		auth.Get("/transactions/{referenceNo}", GetTransactionByReferenceHandler)
+
+		// Virtual Account Inquiry (Public to all authenticated users)
+		auth.Get("/virtual-accounts/{vaNumber}", GetVirtualAccountHandler)
+	})
+
+	// 5. Customer & Merchant Transactional Operations (Transfer & VA Payment)
+	v1.Group(func(txGroup chi.Router) {
+		txGroup.Use(appmw.RequireRoles(svc, repo, model.RoleCustomer, model.RoleMerchant, model.RoleAdmin))
+		txGroup.With(appmw.Idempotency(store)).Post("/transactions/transfer", ExecuteTransferHandler)
+		txGroup.With(appmw.Idempotency(store)).Post("/virtual-accounts/{vaNumber}/pay", PayVirtualAccountHandler)
+	})
+
+	// 6. Corporate Merchant Virtual Account Billing Creation (MERCHANT or ADMIN)
+	v1.With(appmw.RequireRoles(svc, repo, model.RoleMerchant, model.RoleAdmin)).
+		Post("/virtual-accounts", CreateVirtualAccountHandler)
+
+	// 7. Teller Branch Cash Operations — Deposit & Withdrawal (TELLER or ADMIN)
+	v1.With(
+		appmw.RequireRoles(svc, repo, model.RoleTeller, model.RoleAdmin),
+		appmw.Idempotency(store),
+	).Post("/transactions/cash", ExecuteCashTransactionHandler)
+
+	// 8. Customer Service & Admin Account Lifecycle — Unblock PIN & Freeze/Activate Account
+	v1.Group(func(cs chi.Router) {
+		cs.Use(appmw.RequireRoles(svc, repo, model.RoleCustomerService, model.RoleAdmin))
+		cs.Post("/accounts/{accountNumber}/unblock-pin", UnblockAccountPINHandler)
+		cs.Patch("/accounts/{accountNumber}/status", UpdateAccountStatusHandler)
+	})
+
+	// 9. Executive Admin Command Center, General Ledger Trial Balance & OJK Audit Trail (AUDITOR or ADMIN)
+	v1.Group(func(audit chi.Router) {
+		audit.Use(appmw.RequireRoles(svc, repo, model.RoleAuditor, model.RoleAdmin))
+		audit.Get("/admin/dashboard", GetAdminDashboardHandler)
+		audit.Get("/ledger/trial-balance", GetTrialBalanceHandler)
+		audit.Get("/audit-logs", ListAuditLogsHandler)
+	})
+}
+
 // Handler is the Vercel Serverless Function entrypoint.
 func Handler(w http.ResponseWriter, r *http.Request) {
 	router.ServeHTTP(w, r)
@@ -158,14 +193,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 // RootWelcomeHandler provides Core Banking metadata, pre-seeded accounts, and playground links.
 func RootWelcomeHandler(w http.ResponseWriter, r *http.Request) {
 	response.JSON(w, r, http.StatusOK, "Nusantara Core Banking System (CBS) — Operational", map[string]interface{}{
-		"system":              "Nusantara Core Banking Ledger & SNAP-BI Open Banking API",
-		"version":             "2.1.0-enterprise",
-		"interactive_docs":    "/docs",
-		"roles_guide_url":     "/v1/auth/roles",
-		"openapi_spec":        "/openapi.yaml",
-		"health_check":        "/v1/system/health",
-		"sandbox_api_key":     repository.DemoSandboxRawKey,
-		"demo_password_all":   "Password#2026",
+		"system":                        "Nusantara Core Banking Ledger & SNAP-BI Open Banking API",
+		"version":                       "2.2.0-enterprise",
+		"production_base_url":           cfg.PublicBaseURL + "/v1",
+		"trial_playground_base_url":     cfg.PublicBaseURL + "/trial/v1",
+		"dev_sandbox_base_url":          cfg.PublicBaseURL + "/dev/v1",
+		"whitelisted_playground_origin": "https://playground.api.saefulrohman.dev",
+		"interactive_docs":              "/docs",
+		"roles_guide_url":               "/trial/v1/auth/roles",
+		"openapi_spec":                  "/openapi.yaml",
+		"health_check":                  "/v1/system/health",
+		"trial_sandbox_reset_url":       "POST /trial/v1/system/reset",
+		"trial_sandbox_api_key":         repository.TrialSandboxRawKey,
+		"demo_password_all":             "Password#2026",
 		"demo_accounts": []map[string]interface{}{
 			{
 				"account_number": "5240301001",
@@ -193,6 +233,18 @@ func RootWelcomeHandler(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 		"demo_virtual_account": "88000081290001001",
+	}, nil)
+}
+
+// ResetSandboxHandler restores all demo accounts, balances, Virtual Accounts, and Ledger entries in the Trial/Dev Sandbox.
+func ResetSandboxHandler(w http.ResponseWriter, r *http.Request) {
+	traceID := chimw.GetReqID(r.Context())
+	svc.ResetSandboxState(r.Context(), r.RemoteAddr, traceID)
+	response.JSON(w, r, http.StatusOK, "Trial Sandbox environment reset to clean genesis balances", map[string]interface{}{
+		"environment":           "TRIAL_SANDBOX",
+		"restored_accounts":     []string{"5240301001 (Rp 500.000.000)", "5240302002 (Rp 75.000.000)", "5240308888 (Rp 250.000.000)"},
+		"restored_open_va":      "88000081290001001 (Rp 1.250.000)",
+		"trial_sandbox_api_key": repository.TrialSandboxRawKey,
 	}, nil)
 }
 
@@ -732,7 +784,7 @@ func renderBankingError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 }
 
-// ScalarDocsHandler serves the interactive Scalar OpenAPI Playground pre-configured with the Demo Sandbox Key.
+// ScalarDocsHandler serves the interactive Scalar OpenAPI Playground pre-configured with the Trial Sandbox Key.
 func ScalarDocsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -747,7 +799,7 @@ func ScalarDocsHandler(w http.ResponseWriter, r *http.Request) {
     <script
       id="api-reference"
       data-url="/openapi.yaml"
-      data-configuration='{"theme":"kepler","authentication":{"preferredSecurityScheme":"ApiKeyAuth","apiKey":{"token":"` + repository.DemoSandboxRawKey + `"}}}'></script>
+      data-configuration='{"theme":"kepler","authentication":{"preferredSecurityScheme":"ApiKeyAuth","apiKey":{"token":"` + repository.TrialSandboxRawKey + `"}}}'></script>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
   </body>
 </html>`))
@@ -768,4 +820,21 @@ func OpenAPISpecHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("openapi: 3.1.0\ninfo:\n  title: Nusantara Core Banking System API\n  version: 2.1.0\n"))
+}
+
+// PostmanCollectionHandler serves the ready-to-import Postman Collection v2.1 JSON pre-configured for /trial/v1.
+func PostmanCollectionHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="Nusantara_CBS_Trial_Postman_Collection.json"`)
+	if len(openapi.PostmanJSON) > 0 {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(openapi.PostmanJSON)
+		return
+	}
+	if data, err := os.ReadFile("docs/Nusantara_CBS_Trial_Postman_Collection.json"); err == nil {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
 }

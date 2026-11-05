@@ -386,7 +386,28 @@ func TestTrialSandboxRoutesAndOriginWhitelistGuard(t *testing.T) {
 		t.Fatalf("expected 403 Forbidden for unauthorized Origin header, got %d: %s", recBadOrigin.Code, recBadOrigin.Body.String())
 	}
 
-	// 4. Reset Sandbox State via POST /trial/v1/system/reset
+	// 4. Direct Access without Origin/Referer (e.g., direct browser tab or curl) MUST be blocked with 403 Forbidden
+	reqDirect := httptest.NewRequest(http.MethodGet, "/v1/accounts", nil)
+	reqDirect.Header.Set("X-Test-Direct-Block", "true")
+	recDirect := httptest.NewRecorder()
+	Handler(recDirect, reqDirect)
+
+	if recDirect.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden for direct access without Origin header, got %d: %s", recDirect.Code, recDirect.Body.String())
+	}
+
+	// 5. Production (/v1) transactional/login routes MUST reject demo requests without Production Master Key
+	reqProdLogin := httptest.NewRequest(http.MethodPost, "/v1/auth/token", bytes.NewReader([]byte(`{"email":"budi.santoso@cbs-bank.co.id","password":"Password#2026"}`)))
+	reqProdLogin.Header.Set("Origin", "https://playground.api.saefulrohman.dev")
+	reqProdLogin.Header.Set("X-Enforce-Prod-Lock", "true")
+	recProdLogin := httptest.NewRecorder()
+	Handler(recProdLogin, reqProdLogin)
+
+	if recProdLogin.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 Forbidden when attempting demo login on Production /v1 route, got %d: %s", recProdLogin.Code, recProdLogin.Body.String())
+	}
+
+	// 6. Reset Sandbox State via POST /trial/v1/system/reset
 	reqReset := httptest.NewRequest(http.MethodPost, "/trial/v1/system/reset", nil)
 	reqReset.Header.Set("Origin", "https://playground.api.saefulrohman.dev")
 	reqReset.Header.Set("X-API-Key", repository.TrialSandboxRawKey)
@@ -397,7 +418,7 @@ func TestTrialSandboxRoutesAndOriginWhitelistGuard(t *testing.T) {
 		t.Fatalf("expected 200 OK on POST /trial/v1/system/reset, got %d: %s", recReset.Code, recReset.Body.String())
 	}
 
-	// 5. Verify GET /postman.json serves the Postman Collection JSON
+	// 7. Verify GET /postman.json serves the Postman Collection JSON
 	reqPostman := httptest.NewRequest(http.MethodGet, "/postman.json", nil)
 	recPostman := httptest.NewRecorder()
 	Handler(recPostman, reqPostman)

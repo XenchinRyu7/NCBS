@@ -62,7 +62,7 @@ func Load() *Config {
 		}
 	}
 
-	defaultOrigins := "https://playground.api.saefulrohman.dev,https://cbs.api.saefulrohman.dev,https://saefulrohman.dev,http://localhost:3000,http://localhost:5173,http://localhost:8080"
+	defaultOrigins := "https://playground.api.saefulrohman.dev"
 	rawOrigins := getEnv("ALLOWED_ORIGINS", defaultOrigins)
 	var origins []string
 	for _, o := range strings.Split(rawOrigins, ",") {

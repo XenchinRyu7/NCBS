@@ -69,29 +69,29 @@ func NewRouter() *chi.Mux {
 
 	// 1. Production Core Banking Route (/v1)
 	r.Route("/v1", func(v1 chi.Router) {
-		v1.Use(appmw.EnvironmentScope("PRODUCTION"))
+		v1.Use(appmw.EnvironmentScope("PRODUCTION", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(v1, false)
 	})
 
 	// 2. Dedicated Trial / Playground Sandbox Routes (/trial/v1, /trial, /dev/v1, /dev, /sandbox/v1)
 	r.Route("/trial/v1", func(tr chi.Router) {
-		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(tr, true)
 	})
 	r.Route("/trial", func(tr chi.Router) {
-		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		tr.Use(appmw.EnvironmentScope("TRIAL_SANDBOX", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(tr, true)
 	})
 	r.Route("/dev/v1", func(dv chi.Router) {
-		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX"))
+		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(dv, true)
 	})
 	r.Route("/dev", func(dv chi.Router) {
-		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX"))
+		dv.Use(appmw.EnvironmentScope("DEV_SANDBOX", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(dv, true)
 	})
 	r.Route("/sandbox/v1", func(sb chi.Router) {
-		sb.Use(appmw.EnvironmentScope("TRIAL_SANDBOX"))
+		sb.Use(appmw.EnvironmentScope("TRIAL_SANDBOX", cfg.ProductionMasterKey))
 		mountCoreBankingRoutes(sb, true)
 	})
 
@@ -190,49 +190,17 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router.ServeHTTP(w, r)
 }
 
-// RootWelcomeHandler provides Core Banking metadata, pre-seeded accounts, and playground links.
+// RootWelcomeHandler returns enterprise Core Banking Gateway metadata without exposing internal whitelist or demo credentials.
 func RootWelcomeHandler(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, r, http.StatusOK, "Nusantara Core Banking System (CBS) — Operational", map[string]interface{}{
-		"system":                        "Nusantara Core Banking Ledger & SNAP-BI Open Banking API",
-		"version":                       "2.2.0-enterprise",
-		"production_base_url":           cfg.PublicBaseURL + "/v1",
-		"trial_playground_base_url":     cfg.PublicBaseURL + "/trial/v1",
-		"dev_sandbox_base_url":          cfg.PublicBaseURL + "/dev/v1",
-		"whitelisted_playground_origin": "https://playground.api.saefulrohman.dev",
-		"interactive_docs":              "/docs",
-		"roles_guide_url":               "/trial/v1/auth/roles",
-		"openapi_spec":                  "/openapi.yaml",
-		"health_check":                  "/v1/system/health",
-		"trial_sandbox_reset_url":       "POST /trial/v1/system/reset",
-		"trial_sandbox_api_key":         repository.TrialSandboxRawKey,
-		"demo_password_all":             "Password#2026",
-		"demo_accounts": []map[string]interface{}{
-			{
-				"account_number": "5240301001",
-				"owner":          "Budi Santoso (SAVINGS - PRIORITY)",
-				"login_email":    "budi.santoso@cbs-bank.co.id",
-				"role":           "CUSTOMER",
-				"pin":            "123456",
-				"balance":        "Rp 500.000.000",
-			},
-			{
-				"account_number": "5240302002",
-				"owner":          "Siti Rahmawati (SAVINGS - PLATINUM)",
-				"login_email":    "siti.rahma@cbs-bank.co.id",
-				"role":           "CUSTOMER",
-				"pin":            "654321",
-				"balance":        "Rp 75.000.000",
-			},
-			{
-				"account_number": "5240308888",
-				"owner":          "PT Toko Nusantara Digital Tbk (CHECKING - PRIORITY)",
-				"login_email":    "merchant@tokonusantara.co.id",
-				"role":           "MERCHANT",
-				"pin":            "888888",
-				"balance":        "Rp 250.000.000",
-			},
-		},
-		"demo_virtual_account": "88000081290001001",
+	response.JSON(w, r, http.StatusOK, "Nusantara Core Banking System (CBS) — SNAP-BI Open Banking Gateway", map[string]interface{}{
+		"system":            "Nusantara Core Banking Ledger & SNAP-BI Open Banking API",
+		"version":           "2.4.0-enterprise",
+		"status":            "OPERATIONAL",
+		"compliance":        "Bank Indonesia SNAP-BI & ISO 20022 Core Ledger",
+		"security_gateway":  "Zero-Trust WAF & Partner mTLS Enforced",
+		"production_ledger": cfg.PublicBaseURL + "/v1",
+		"sandbox_gateway":   cfg.PublicBaseURL + "/trial/v1",
+		"health_check":      "/v1/system/health",
 	}, nil)
 }
 

@@ -38,7 +38,7 @@ if (tokenCookie) {
 ---
 
 <!doctype html>
-<html lang="id" class="dark" data-color-theme="custom">
+<html lang="id" class="dark" data-color-theme="claude">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -47,7 +47,6 @@ if (tokenCookie) {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link id="ethereal-theme-link" rel="stylesheet" href="/themes/claude.css" />
     <script is:inline>
       const mode = localStorage.getItem('cbs_theme_mode') || 'dark';
       const color = localStorage.getItem('cbs_color_theme') || 'claude';
@@ -58,9 +57,7 @@ if (tokenCookie) {
         document.documentElement.classList.add('light');
         document.documentElement.classList.remove('dark');
       }
-      document.documentElement.setAttribute('data-color-theme', 'custom');
-      const themeLink = document.getElementById('ethereal-theme-link');
-      if (themeLink) themeLink.href = `/themes/${color}.css`;
+      document.documentElement.setAttribute('data-color-theme', color);
     </script>
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row selection:bg-primary/20 selection:text-primary">

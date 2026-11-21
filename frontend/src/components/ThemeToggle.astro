@@ -6,7 +6,7 @@
   <div class="relative">
     <select
       id="color-theme-select"
-      class="rounded-lg border border-border bg-secondary/90 px-2 py-1 text-xs text-foreground font-mono focus:border-primary focus:outline-none cursor-pointer"
+      class="rounded-lg border border-border bg-secondary px-2.5 py-1 text-xs text-foreground font-mono focus:border-primary focus:outline-none cursor-pointer"
       title="Pilih Preset Tema OKLCH Ethereal UI"
     >
       <option value="claude">Claude (Anthropic Warm)</option>
@@ -25,7 +25,7 @@
   <button
     id="mode-toggle-btn"
     type="button"
-    class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary/90 text-foreground hover:bg-muted transition cursor-pointer"
+    class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary text-foreground hover:bg-muted transition cursor-pointer"
     title="Toggle Mode Terang / Gelap"
   >
     {/* Sun Icon (shown in dark mode to switch to light) */}
@@ -50,20 +50,6 @@
     const storedMode = localStorage.getItem('cbs_theme_mode') || 'dark';
     const storedTheme = localStorage.getItem('cbs_color_theme') || 'claude';
 
-    function ensureThemeLink(theme) {
-      let link = document.getElementById('ethereal-theme-link');
-      if (!link) {
-        link = document.createElement('link');
-        link.id = 'ethereal-theme-link';
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
-      }
-      const targetHref = `/themes/${theme}.css`;
-      if (link.getAttribute('href') !== targetHref) {
-        link.href = targetHref;
-      }
-    }
-
     function applyMode(mode) {
       if (mode === 'dark') {
         html.classList.add('dark');
@@ -80,8 +66,7 @@
     }
 
     function applyColorTheme(theme) {
-      ensureThemeLink(theme);
-      html.setAttribute('data-color-theme', 'custom');
+      html.setAttribute('data-color-theme', theme);
       if (themeSelect) themeSelect.value = theme;
       localStorage.setItem('cbs_color_theme', theme);
     }

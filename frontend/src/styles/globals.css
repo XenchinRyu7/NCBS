@@ -96,6 +96,28 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* Ethereal UI Contrast Safeguards & Dark Mode Auto-Remap (from theming.mdx) */
+html.dark .bg-white,
+html.dark[data-color-theme] .bg-white {
+  background-color: var(--card) !important;
+}
+html.dark .border-zinc-200,
+html.dark[data-color-theme] .border-zinc-200 {
+  border-color: var(--border) !important;
+}
+html.dark .text-zinc-900,
+html.dark[data-color-theme] .text-zinc-900 {
+  color: var(--card-foreground) !important;
+}
+html.dark .text-zinc-500,
+html.dark[data-color-theme] .text-zinc-500 {
+  color: var(--muted-foreground) !important;
+}
+html.dark .text-zinc-400,
+html.dark[data-color-theme] .text-zinc-400 {
+  color: var(--muted-foreground) !important;
+}
+
 /* Custom Telemetry Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;

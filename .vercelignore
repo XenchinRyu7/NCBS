@@ -1,0 +1,9 @@
+backend/target
+target
+node_modules
+.git
+.gemini
+.cache
+dist
+.env
+.env.local

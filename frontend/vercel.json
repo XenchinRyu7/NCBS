@@ -2,27 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "astro",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm build",
-  "rewrites": [
-    {
-      "source": "/v1/:path*",
-      "destination": "https://cbs.api.saefulrohman.dev/v1/:path*"
-    },
-    {
-      "source": "/docs",
-      "destination": "https://cbs.api.saefulrohman.dev/docs"
-    },
-    {
-      "source": "/docs/:path*",
-      "destination": "https://cbs.api.saefulrohman.dev/docs/:path*"
-    },
-    {
-      "source": "/health",
-      "destination": "https://cbs.api.saefulrohman.dev/v1/system/health"
-    },
-    {
-      "source": "/system/:path*",
-      "destination": "https://cbs.api.saefulrohman.dev/v1/system/:path*"
-    }
-  ]
+  "buildCommand": "pnpm build"
 }

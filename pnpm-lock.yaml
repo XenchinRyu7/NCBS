@@ -12,16 +12,16 @@ importers:
     dependencies:
       '@astrojs/node':
         specifier: ^9.0.0
-        version: 9.5.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))
+        version: 9.5.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))
       '@astrojs/react':
         specifier: 4.2.1
         version: 4.2.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(jiti@1.21.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(yaml@2.9.1)
       '@astrojs/tailwind':
         specifier: ^5.1.0
-        version: 5.1.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(tailwindcss@3.4.19(yaml@2.9.1))
+        version: 5.1.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(tailwindcss@3.4.19(yaml@2.9.1))
       '@astrojs/vercel':
         specifier: 9.0.5
-        version: 9.0.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(react@19.3.1)(rollup@4.68.7)
+        version: 9.0.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(react@19.3.1)(rollup@4.68.7)
       '@etherealui/react':
         specifier: ^0.0.8
         version: 0.0.8(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -30,16 +30,25 @@ importers:
         version: 1.5.0(@types/react@19.3.0)(react@19.3.1)
       astro:
         specifier: ^5.0.0
-        version: 5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
+        version: 5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
+      bcryptjs:
+        specifier: ^3.0.3
+        version: 3.0.3
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      jose:
+        specifier: ^6.2.18
+        version: 6.2.18
       lucide-react:
         specifier: ^1.77.0
         version: 1.77.0(@types/react@19.3.0)(react@19.3.1)
+      postgres:
+        specifier: ^4.1.1
+        version: 4.1.1
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -52,6 +61,10 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(yaml@2.9.1)
+    devDependencies:
+      '@types/bcryptjs':
+        specifier: ^3.0.0
+        version: 3.0.0
 
 packages:
 
@@ -1299,6 +1312,10 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
+  '@types/bcryptjs@3.0.0':
+    resolution: {integrity: sha512-WRZOuCuaz8UcZZE4R5HXTco2goQSI2XxjGY3hbM/xDvwmqFWd4ivooImsMx65OKM6CtNKbnZ5YL+YwAwK7c1dg==}
+    deprecated: This is a stub types definition. bcryptjs provides its own type definitions, so you do not need this installed.
+
   '@types/debug@4.1.13':
     resolution: {integrity: sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw==}
 
@@ -1330,6 +1347,9 @@ packages:
 
   '@ungap/structured-clone@1.4.0':
     resolution: {integrity: sha512-1mEZtMKPM09vDmQt5y7YvmN2+DFTP7Tg0EWXdic8/C6VRnpb33e4ghisCIE3WZjsE2N8mf+QV1Zqh7ZFYLWInQ==}
+
+  '@upstash/redis@1.41.0':
+    resolution: {integrity: sha512-TIu9C1B0ToXQLXt2M1LQuGZ6nkMjOZPIdJyU0GGWKZToa/MvJF8x2IRDOPMIAw2BLGXGhi1aZr5AnhlXu4YLXg==}
 
   '@vercel/analytics@1.6.1':
     resolution: {integrity: sha512-oH9He/bEM+6oKlv3chWuOOcp8Y6fo6/PSro8hEkgCW3pu9/OiCXiUpRUogDh3Fs3LH2sosDrx8CxeOLBEE+afg==}
@@ -1479,6 +1499,10 @@ packages:
   baseline-browser-mapping@2.11.39:
     resolution: {integrity: sha512-Q9buOYhr2ggrEZpImICecZTJHCCd8yXkRUokFlUEQ8uiD6oP82F4W4jWnhOHZYV+wlvrC51V7Wy0ULyWjil5Wg==}
     engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
     hasBin: true
 
   binary-extensions@2.3.0:
@@ -1976,6 +2000,9 @@ packages:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
     hasBin: true
 
+  jose@6.2.18:
+    resolution: {integrity: sha512-doV4thUwgkrycJH4yLeqwTGIIZphHl+pk7CPReuMIhYhncmgzdko85MaCG4YQFTxqMFr1/oEH32tZuKKovcDEg==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2401,6 +2428,10 @@ packages:
   postcss@8.5.33:
     resolution: {integrity: sha512-RVHEU9/Pp1Fnjr/MpAJsZoADukCKhfIi15OunEYiGktIkYLkPVvC1sioWolGDS7XByMTx9m/IGbro0Js13zhnQ==}
     engines: {node: ^10 || ^12 || >=14}
+
+  postgres@4.1.1:
+    resolution: {integrity: sha512-1kJDojqNZC+iTHHXh6eif0J98LUtyLAePe/qkW1GK35eh2JixlsAiIKq3FGI+xqI+SUGTNodzf7TScVeIIyUug==}
+    engines: {node: '>=18'}
 
   prismjs@1.30.0:
     resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
@@ -3034,10 +3065,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/node@9.5.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))':
+  '@astrojs/node@9.5.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))':
     dependencies:
       '@astrojs/internal-helpers': 0.7.6
-      astro: 5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
+      astro: 5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
       send: 1.2.1
       server-destroy: 1.0.1
     transitivePeerDependencies:
@@ -3070,9 +3101,9 @@ snapshots:
       - tsx
       - yaml
 
-  '@astrojs/tailwind@5.1.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(tailwindcss@3.4.19(yaml@2.9.1))':
+  '@astrojs/tailwind@5.1.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(tailwindcss@3.4.19(yaml@2.9.1))':
     dependencies:
-      astro: 5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
+      astro: 5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
       autoprefixer: 10.7.0(postcss@8.5.33)
       postcss: 8.5.33
       postcss-load-config: 4.0.2(postcss@8.5.33)
@@ -3092,14 +3123,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/vercel@9.0.5(astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(react@19.3.1)(rollup@4.68.7)':
+  '@astrojs/vercel@9.0.5(astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1))(react@19.3.1)(rollup@4.68.7)':
     dependencies:
       '@astrojs/internal-helpers': 0.7.6
       '@vercel/analytics': 1.6.1(react@19.3.1)
       '@vercel/functions': 2.2.13
       '@vercel/nft': 0.30.4(rollup@4.68.7)
       '@vercel/routing-utils': 5.3.3
-      astro: 5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
+      astro: 5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1)
       esbuild: 0.25.12
       tinyglobby: 0.2.17
     transitivePeerDependencies:
@@ -4142,6 +4173,10 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.14
 
+  '@types/bcryptjs@3.0.0':
+    dependencies:
+      bcryptjs: 3.0.3
+
   '@types/debug@4.1.13':
     dependencies:
       '@types/ms': 2.1.0
@@ -4173,6 +4208,11 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@ungap/structured-clone@1.4.0': {}
+
+  '@upstash/redis@1.41.0':
+    dependencies:
+      uncrypto: 0.1.3
+    optional: true
 
   '@vercel/analytics@1.6.1(react@19.3.1)':
     optionalDependencies:
@@ -4276,7 +4316,7 @@ snapshots:
 
   array-iterate@2.0.1: {}
 
-  astro@5.18.2(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1):
+  astro@5.18.2(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)(jiti@1.21.7)(rollup@4.68.7)(typescript@5.9.3)(yaml@2.9.1):
     dependencies:
       '@astrojs/compiler': 2.13.1
       '@astrojs/internal-helpers': 0.7.6
@@ -4331,7 +4371,7 @@ snapshots:
       ultrahtml: 1.7.0
       unifont: 0.7.5
       unist-util-visit: 5.2.0
-      unstorage: 1.17.6(@vercel/functions@2.2.13)
+      unstorage: 1.17.6(@upstash/redis@1.41.0)(@vercel/functions@2.2.13)
       vfile: 6.0.3
       vite: 6.4.6(jiti@1.21.7)(yaml@2.9.1)
       vitefu: 1.1.4(vite@6.4.6(jiti@1.21.7)(yaml@2.9.1))
@@ -4398,6 +4438,8 @@ snapshots:
   base-64@1.0.0: {}
 
   baseline-browser-mapping@2.11.39: {}
+
+  bcryptjs@3.0.3: {}
 
   binary-extensions@2.3.0: {}
 
@@ -4933,6 +4975,8 @@ snapshots:
       '@pkgjs/parseargs': 0.11.0
 
   jiti@1.21.7: {}
+
+  jose@6.2.18: {}
 
   js-tokens@4.0.0: {}
 
@@ -5492,6 +5536,8 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.4
 
+  postgres@4.1.1: {}
+
   prismjs@1.30.0: {}
 
   prompts@2.4.2:
@@ -5984,7 +6030,7 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.1.0
 
-  unstorage@1.17.6(@vercel/functions@2.2.13):
+  unstorage@1.17.6(@upstash/redis@1.41.0)(@vercel/functions@2.2.13):
     dependencies:
       anymatch: 3.1.3
       chokidar: 5.0.0
@@ -5995,6 +6041,7 @@ snapshots:
       ofetch: 1.5.1
       ufo: 1.6.4
     optionalDependencies:
+      '@upstash/redis': 1.41.0
       '@vercel/functions': 2.2.13
 
   update-browserslist-db@1.4.0(browserslist@4.29.6):

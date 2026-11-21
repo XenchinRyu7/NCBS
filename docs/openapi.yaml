@@ -16,14 +16,12 @@ info:
     - **Multi-Rail Clearing Engine**: **Intrabank Overbooking** (Rp 0 fee), **BI-FAST** (Rp 2.500 fee), **RTGS** (Rp 30.000 fee), **LLG/SKNBI** (Rp 2.900 fee), **Teller Cash Deposit/Withdrawal**, and **Virtual Account Settlement**.
     - **6-Digit PIN & Brute-Force Lockout**: Automatic `PIN_BLOCKED` status after 3 consecutive invalid PIN attempts; unblockable by `CUSTOMER_SERVICE`.
 servers:
+  - url: /
+    description: Production Core Banking Gateway & API
   - url: /trial
-    description: Trial / Playground Sandbox Environment (/trial/v1) — Active for Demo & Postman Testing
+    description: Trial Sandbox Gateway (/trial/v1)
   - url: /dev
-    description: Developer Sandbox Environment (/dev/v1)
-  - url: https://cbs.api.saefulrohman.dev/trial
-    description: Remote Trial Sandbox (cbs.api.saefulrohman.dev/trial/v1)
-  - url: https://cbs.api.saefulrohman.dev
-    description: Live Production Core Ledger (/v1) — Rejects cbs_trial_* Sandbox Keys
+    description: Developer Sandbox Gateway (/dev/v1)
 security:
   - ApiKeyAuth: []
 paths:

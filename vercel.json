@@ -3,7 +3,6 @@
   "framework": "astro",
   "installCommand": "pnpm install",
   "buildCommand": "cd frontend && pnpm build",
-  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/v1/:path*",

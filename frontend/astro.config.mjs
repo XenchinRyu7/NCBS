@@ -4,7 +4,7 @@ import vercel from '@astrojs/vercel';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
 
-const isVercel = Boolean(process.env.VERCEL);
+const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
 // https://astro.build/config
 export default defineConfig({

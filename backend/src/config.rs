@@ -10,10 +10,15 @@ pub struct Config {
     pub public_base_url: String,
     pub production_master_key: String,
     pub default_rate_limit: u32,
+    pub database_url: Option<String>,
+    pub redis_url: Option<String>,
 }
 
 impl Config {
     pub fn from_env() -> Self {
+        dotenvy::dotenv().ok();
+        let _ = dotenvy::from_path("../.env");
+
         let port = env::var("PORT")
             .ok()
             .and_then(|p| p.parse().ok())
@@ -33,6 +38,8 @@ impl Config {
             .ok()
             .and_then(|r| r.parse().ok())
             .unwrap_or(120);
+        let database_url = env::var("DATABASE_URL").ok().filter(|s| !s.trim().is_empty());
+        let redis_url = env::var("UPSTASH_REDIS_URL").ok().filter(|s| !s.trim().is_empty());
 
         Self {
             port,
@@ -43,6 +50,8 @@ impl Config {
             public_base_url,
             production_master_key,
             default_rate_limit,
+            database_url,
+            redis_url,
         }
     }
 }

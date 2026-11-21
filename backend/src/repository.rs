@@ -16,6 +16,8 @@ pub const TRIAL_SANDBOX_RAW_KEY: &str = "cbs_trial_snap_sandbox_2026";
 pub struct Repository {
     state: Arc<RwLock<RepoState>>,
     api_key_salt: String,
+    pg_pool: Option<sqlx::PgPool>,
+    redis_conn: Option<redis::aio::ConnectionManager>,
 }
 
 struct RepoState {
@@ -74,6 +76,14 @@ impl std::error::Error for BankingError {}
 
 impl Repository {
     pub fn new(api_key_salt: String) -> Self {
+        Self::new_with_adapters(api_key_salt, None, None)
+    }
+
+    pub fn new_with_adapters(
+        api_key_salt: String,
+        pg_pool: Option<sqlx::PgPool>,
+        redis_conn: Option<redis::aio::ConnectionManager>,
+    ) -> Self {
         let repo = Self {
             state: Arc::new(RwLock::new(RepoState {
                 customers: HashMap::new(),
@@ -88,9 +98,19 @@ impl Repository {
                 idempotency_cache: HashMap::new(),
             })),
             api_key_salt,
+            pg_pool,
+            redis_conn,
         };
         repo.seed_genesis_data();
         repo
+    }
+
+    pub fn pg_pool(&self) -> Option<&sqlx::PgPool> {
+        self.pg_pool.as_ref()
+    }
+
+    pub fn redis_conn(&self) -> Option<&redis::aio::ConnectionManager> {
+        self.redis_conn.as_ref()
     }
 
     pub fn hash_api_key(&self, raw_key: &str) -> String {

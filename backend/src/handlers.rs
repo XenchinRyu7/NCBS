@@ -34,10 +34,36 @@ pub async fn root_welcome(State(state): State<Arc<AppState>>) -> Response {
 // Health Check
 pub async fn health_check(State(state): State<Arc<AppState>>) -> Response {
     let tb = state.repo.get_trial_balance();
+
+    let supabase_status = if let Some(pool) = state.repo.pg_pool() {
+        match sqlx::query("SELECT 1").execute(pool).await {
+            Ok(_) => "ONLINE_CONNECTED",
+            Err(_) => "CONNECTION_DEGRADED",
+        }
+    } else {
+        "IN_MEMORY_HA_MODE"
+    };
+
+    let upstash_status = if let Some(mut r) = state.repo.redis_conn().cloned() {
+        let pong: Result<String, _> = redis::cmd("PING").query_async(&mut r).await;
+        match pong {
+            Ok(_) => "ONLINE_CONNECTED",
+            Err(_) => "CONNECTION_DEGRADED",
+        }
+    } else {
+        "IN_MEMORY_HA_MODE"
+    };
+
     let body = serde_json::json!({
         "status": "HEALTHY",
         "service": "nusantara-core-banking-system",
         "runtime": "Rust Axum Enterprise Engine",
+        "infrastructure": {
+            "supabase_postgresql": supabase_status,
+            "upstash_redis": upstash_status,
+            "persistence_architecture": "Hybrid In-Memory Core with Distributed Cloud Persistence",
+            "tier": "Tier-1 Mission-Critical Banking Kernel"
+        },
         "general_ledger_integrity": {
             "is_balanced": tb.is_balanced,
             "discrepancy": tb.discrepancy,

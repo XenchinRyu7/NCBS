@@ -2,17 +2,21 @@
 ---
 
 <div class="flex items-center gap-1.5">
-  {/* Color Theme Selector */}
+  {/* Official Ethereal UI OKLCH Theme Selector */}
   <div class="relative">
     <select
       id="color-theme-select"
-      class="rounded-lg border border-border bg-secondary/80 px-2 py-1 text-xs text-foreground font-mono focus:border-primary focus:outline-none cursor-pointer"
-      title="Pilih Tema Warna Telemetri"
+      class="rounded-lg border border-border bg-secondary/90 px-2 py-1 text-xs text-foreground font-mono focus:border-primary focus:outline-none cursor-pointer"
+      title="Pilih Preset Tema OKLCH Ethereal UI"
     >
+      <option value="claude">Claude (Anthropic Warm)</option>
       <option value="emerald">Emerald Vault</option>
-      <option value="sapphire">Sapphire Treasury</option>
-      <option value="amber">Amber Reserve</option>
-      <option value="violet">Violet Fintech</option>
+      <option value="cyberpunk">Cyberpunk Neon</option>
+      <option value="tokyo-night">Tokyo Night Indigo</option>
+      <option value="catppuccin">Catppuccin Mocha</option>
+      <option value="midnight">Midnight Obsidian</option>
+      <option value="matrix">Matrix Phosphor</option>
+      <option value="stone">Stone Minimalist</option>
       <option value="rose">Rose Priority</option>
     </select>
   </div>
@@ -21,13 +25,17 @@
   <button
     id="mode-toggle-btn"
     type="button"
-    class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary/80 text-foreground hover:bg-muted transition cursor-pointer"
+    class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-secondary/90 text-foreground hover:bg-muted transition cursor-pointer"
     title="Toggle Mode Terang / Gelap"
   >
     {/* Sun Icon (shown in dark mode to switch to light) */}
-    <svg id="sun-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    <svg id="sun-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
     {/* Moon Icon (shown in light mode to switch to dark) */}
-    <svg id="moon-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+    <svg id="moon-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
   </button>
 </div>
 
@@ -39,11 +47,23 @@
     const moonIcon = document.getElementById('moon-icon');
     const themeSelect = document.getElementById('color-theme-select');
 
-    // Read stored settings
     const storedMode = localStorage.getItem('cbs_theme_mode') || 'dark';
-    const storedTheme = localStorage.getItem('cbs_color_theme') || 'emerald';
+    const storedTheme = localStorage.getItem('cbs_color_theme') || 'claude';
 
-    // Apply Mode
+    function ensureThemeLink(theme) {
+      let link = document.getElementById('ethereal-theme-link');
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'ethereal-theme-link';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+      const targetHref = `/themes/${theme}.css`;
+      if (link.getAttribute('href') !== targetHref) {
+        link.href = targetHref;
+      }
+    }
+
     function applyMode(mode) {
       if (mode === 'dark') {
         html.classList.add('dark');
@@ -59,9 +79,9 @@
       localStorage.setItem('cbs_theme_mode', mode);
     }
 
-    // Apply Color Theme
     function applyColorTheme(theme) {
-      html.setAttribute('data-color-theme', theme);
+      ensureThemeLink(theme);
+      html.setAttribute('data-color-theme', 'custom');
       if (themeSelect) themeSelect.value = theme;
       localStorage.setItem('cbs_color_theme', theme);
     }
@@ -69,7 +89,6 @@
     applyMode(storedMode);
     applyColorTheme(storedTheme);
 
-    // Event Listeners
     if (modeBtn) {
       modeBtn.onclick = () => {
         const isDark = html.classList.contains('dark');

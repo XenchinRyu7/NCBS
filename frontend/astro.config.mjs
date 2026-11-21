@@ -13,8 +13,15 @@ export default defineConfig({
     tailwind({
       applyBaseStyles: false,
     }),
-    react(),
+    react({
+      include: ['**/components/**/*.{jsx,tsx}', '**/blocks/**/*.{jsx,tsx}'],
+    }),
   ],
+  vite: {
+    optimizeDeps: {
+      include: ['@etherealui/react', 'lucide-react', 'react', 'react-dom'],
+    },
+  },
   server: {
     port: 3000,
     host: true,

@@ -2,6 +2,7 @@
 import '../styles/globals.css';
 import { apiCall } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import EnterpriseTelemetry from '../components/EnterpriseTelemetry';
 
 const tokenCookie = Astro.cookies.get('cbs_token')?.value;
 
@@ -37,7 +38,7 @@ if (tokenCookie) {
 ---
 
 <!doctype html>
-<html lang="id" class="dark" data-color-theme="emerald">
+<html lang="id" class="dark" data-color-theme="custom">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -46,9 +47,10 @@ if (tokenCookie) {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link id="ethereal-theme-link" rel="stylesheet" href="/themes/claude.css" />
     <script is:inline>
       const mode = localStorage.getItem('cbs_theme_mode') || 'dark';
-      const color = localStorage.getItem('cbs_color_theme') || 'emerald';
+      const color = localStorage.getItem('cbs_color_theme') || 'claude';
       if (mode === 'dark') {
         document.documentElement.classList.add('dark');
         document.documentElement.classList.remove('light');
@@ -56,7 +58,9 @@ if (tokenCookie) {
         document.documentElement.classList.add('light');
         document.documentElement.classList.remove('dark');
       }
-      document.documentElement.setAttribute('data-color-theme', color);
+      document.documentElement.setAttribute('data-color-theme', 'custom');
+      const themeLink = document.getElementById('ethereal-theme-link');
+      if (themeLink) themeLink.href = `/themes/${color}.css`;
     </script>
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row selection:bg-primary/20 selection:text-primary">
@@ -219,7 +223,10 @@ if (tokenCookie) {
         {/* TAB 1: OVERVIEW & ACCOUNTS */}
         {/* ------------------------------------------------------------------- */}
         <section id="pane-overview" class="tab-pane space-y-6">
-          {/* KPI Metrics Grid */}
+          {/* Real-time Enterprise Telemetry powered by @etherealui/react */}
+          <EnterpriseTelemetry client:load />
+
+          {/* Account Detail Cards */}
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-xl border border-border bg-card p-4 space-y-1">
               <span class="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Saldo Rekening Utama</span>

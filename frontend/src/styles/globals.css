@@ -3,35 +3,61 @@
 @tailwind utilities;
 
 @layer base {
-  :root,
-  .dark {
+  :root {
+    color-scheme: light;
     --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
+    /* Light Mode Default */
+    --background: #fbfbfd;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+    --primary: #059669;
+    --primary-foreground: #ffffff;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #059669;
+
+    --sidebar: #f8fafc;
+    --sidebar-foreground: #09090b;
+    --sidebar-primary: #059669;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f1f5f9;
+    --sidebar-accent-foreground: #0f172a;
+    --sidebar-border: #e2e8f0;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    color-scheme: dark;
+    /* Dark-First Telemetry Canvas (Ethereal Standard) */
     --background: #09090b;
     --foreground: #fafafa;
-
     --card: #121215;
     --card-foreground: #fafafa;
-
     --popover: #18181b;
     --popover-foreground: #fafafa;
-
     --primary: #10b981;
     --primary-foreground: #022c22;
-
     --secondary: #1f1f23;
     --secondary-foreground: #fafafa;
-
     --muted: #18181b;
     --muted-foreground: #a1a1aa;
-
     --accent: #27272a;
     --accent-foreground: #fafafa;
-
     --destructive: #f43f5e;
     --destructive-foreground: #ffffff;
-
     --border: rgba(255, 255, 255, 0.08);
     --input: rgba(255, 255, 255, 0.12);
     --ring: #10b981;
@@ -43,8 +69,87 @@
     --sidebar-accent: #18181b;
     --sidebar-accent-foreground: #fafafa;
     --sidebar-border: rgba(255, 255, 255, 0.08);
+  }
 
-    --radius: 0.75rem;
+  /* Preset Themes */
+  /* 1. Sapphire Treasury */
+  [data-color-theme="sapphire"] {
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --ring: #2563eb;
+    --sidebar-primary: #2563eb;
+    --sidebar-primary-foreground: #ffffff;
+  }
+  .dark[data-color-theme="sapphire"] {
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --ring: #3b82f6;
+    --sidebar-primary: #3b82f6;
+    --sidebar-primary-foreground: #ffffff;
+  }
+
+  /* 2. Amber Gold Reserve */
+  [data-color-theme="amber"] {
+    --primary: #d97706;
+    --primary-foreground: #ffffff;
+    --ring: #d97706;
+    --sidebar-primary: #d97706;
+    --sidebar-primary-foreground: #ffffff;
+  }
+  .dark[data-color-theme="amber"] {
+    --primary: #f59e0b;
+    --primary-foreground: #1c1917;
+    --ring: #f59e0b;
+    --sidebar-primary: #f59e0b;
+    --sidebar-primary-foreground: #1c1917;
+  }
+
+  /* 3. Violet Telemetry */
+  [data-color-theme="violet"] {
+    --primary: #7c3aed;
+    --primary-foreground: #ffffff;
+    --ring: #7c3aed;
+    --sidebar-primary: #7c3aed;
+    --sidebar-primary-foreground: #ffffff;
+  }
+  .dark[data-color-theme="violet"] {
+    --primary: #a855f7;
+    --primary-foreground: #ffffff;
+    --ring: #a855f7;
+    --sidebar-primary: #a855f7;
+    --sidebar-primary-foreground: #ffffff;
+  }
+
+  /* 4. Rose Priority */
+  [data-color-theme="rose"] {
+    --primary: #e11d48;
+    --primary-foreground: #ffffff;
+    --ring: #e11d48;
+    --sidebar-primary: #e11d48;
+    --sidebar-primary-foreground: #ffffff;
+  }
+  .dark[data-color-theme="rose"] {
+    --primary: #f43f5e;
+    --primary-foreground: #ffffff;
+    --ring: #f43f5e;
+    --sidebar-primary: #f43f5e;
+    --sidebar-primary-foreground: #ffffff;
+  }
+
+  /* 5. Emerald Vault (Default) */
+  [data-color-theme="emerald"] {
+    --primary: #059669;
+    --primary-foreground: #ffffff;
+    --ring: #059669;
+    --sidebar-primary: #059669;
+    --sidebar-primary-foreground: #ffffff;
+  }
+  .dark[data-color-theme="emerald"] {
+    --primary: #10b981;
+    --primary-foreground: #022c22;
+    --ring: #10b981;
+    --sidebar-primary: #10b981;
+    --sidebar-primary-foreground: #022c22;
   }
 }
 
@@ -53,6 +158,22 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Base form controls styling & autofill immunity */
+input, select, textarea {
+  color: inherit;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--foreground) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Custom Telemetry Scrollbars */
@@ -64,9 +185,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(125, 125, 125, 0.2);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(125, 125, 125, 0.4);
 }

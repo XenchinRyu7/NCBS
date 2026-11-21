@@ -31,7 +31,7 @@ function replaceSymlinksWithRealFiles(dir) {
         replaceSymlinksWithRealFiles(fullPath);
       }
     } catch (err) {
-      // Continue on any unresolvable reference
+      // Continue on unresolvable reference
     }
   }
 }
@@ -48,7 +48,7 @@ if (fs.existsSync(frontendOutput)) {
   }
 }
 
-// 2. Resolve all pnpm absolute symlinks in functions to physical directories
+// 2. Resolve all pnpm absolute symlinks in functions to physical directories and create root index.mjs handler
 const functionDirs = [
   path.join(rootOutput, 'functions'),
   path.join(frontendOutput, 'functions'),
@@ -63,14 +63,38 @@ for (const fDir of functionDirs) {
         replaceSymlinksWithRealFiles(funcPath);
         console.log(`[prepare-vercel] ✓ Dereferenced all symlinks inside ${f.name}`);
 
-        // Set stable LTS Node.js runtime (nodejs20.x) in .vc-config.json
         const vcConfigFile = path.join(funcPath, '.vc-config.json');
         if (fs.existsSync(vcConfigFile)) {
           try {
             const vcConfig = JSON.parse(fs.readFileSync(vcConfigFile, 'utf8'));
+            const originalHandler = vcConfig.handler || 'frontend/dist/server/entry.mjs';
+
+            // Create resilient root index.mjs wrapper for Lambda launcher
+            const indexFile = path.join(funcPath, 'index.mjs');
+            const handlerImportPath = originalHandler.startsWith('.') ? originalHandler : `./${originalHandler}`;
+            const wrapperContent = `import ssrEntry from '${handlerImportPath}';
+
+export default async function handler(req, res) {
+  try {
+    return await ssrEntry(req, res);
+  } catch (err) {
+    console.error('[NCBS-SSR-CRASH]', err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({
+      error: 'NCBS Serverless Function Error',
+      message: err?.message,
+      stack: err?.stack,
+    }));
+  }
+}
+`;
+            fs.writeFileSync(indexFile, wrapperContent);
+
+            vcConfig.handler = 'index.mjs';
             vcConfig.runtime = 'nodejs20.x';
             fs.writeFileSync(vcConfigFile, JSON.stringify(vcConfig, null, 2));
-            console.log(`[prepare-vercel] ✓ Set runtime to nodejs20.x in ${vcConfigFile}`);
+            console.log(`[prepare-vercel] ✓ Set clean root index.mjs handler and nodejs20.x in ${vcConfigFile}`);
           } catch (e) {
             console.warn('[prepare-vercel] Could not patch .vc-config.json:', e.message);
           }

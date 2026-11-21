@@ -818,6 +818,6 @@ pub async fn scalar_docs() -> Html<&'static str> {
 
 // OpenAPI spec
 pub async fn openapi_spec() -> Response {
-    let yaml = include_str!("../../pkg/openapi/openapi.yaml");
+    let yaml = include_str!("../../docs/openapi.yaml");
     ([(axum::http::header::CONTENT_TYPE, "application/yaml")], yaml).into_response()
 }

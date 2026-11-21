@@ -65,16 +65,18 @@ Buka **`http://localhost:3000`** di browser untuk mengakses antarmuka perbankan 
 
 ---
 
-## 🛡️ 6 Role Perbankan & Kredensial Demo (Password: `Password#2026`)
+## 🛡️ Arsitektur Hak Akses & Matriks RBAC (Role-Based Access Control)
 
-| Role | Email Login | Rekening / Identitas | Kapabilitas & Kewenangan |
+Sistem mengimplementasikan prinsip *Least Privilege* dan *Zero-Trust Isolation* di tingkat kernel engine:
+
+| Role | Lingkup Operasional | Domain Kewenangan & Hak Akses | Kebijakan Keamanan (Zero-Trust) |
 | :--- | :--- | :--- | :--- |
-| **`CUSTOMER`** | `budi.santoso@cbs-bank.co.id`<br>`siti.rahma@cbs-bank.co.id` | `5240301001` (PIN `123456`)<br>`5240302002` (PIN `654321`) | Cek saldo & mutasi rekening sendiri, transfer dana (`INTRABANK`, `BI_FAST`, `RTGS`, `LLG`), bayar Virtual Account. Dilarang melihat rekening nasabah lain (403 Forbidden). |
-| **`MERCHANT`** | `merchant@tokonusantara.co.id` | Giro `5240308888`<br>(PIN `888888`) | Kelola giro korporasi, generate tagihan Virtual Account untuk pelanggan, pantau status pembayaran VA. |
-| **`TELLER`** | `teller@cbs-bank.co.id` | Staf Cabang Sudirman | Eksekusi Setor Tunai (`DEPOSIT`) & Tarik Tunai (`WITHDRAWAL`) nasabah terhadap GL Kas Utama & Cadangan Likuiditas Bank (`1001000001`). |
-| **`CUSTOMER_SERVICE`** | `cs@cbs-bank.co.id` | Staf Cabang Sudirman | Buka blokir PIN rekening yang terkunci akibat 3x salah PIN (`PIN_BLOCKED`), aktivasi/freeze status rekening nasabah. |
-| **`AUDITOR`** | `auditor@cbs-bank.co.id` | Pengawas OJK | Akses 100% Read-Only: verifikasi integritas Trial Balance General Ledger (`Total Debit == Total Credit`) dan Regulatory Audit Trail OJK. |
-| **`ADMIN`** | `admin@cbs-bank.co.id` | Master Controller | Akses penuh operasional, Sandbox Reset Controller, integrasi SNAP-BI Open Banking partner key. |
+| **`CUSTOMER`** | Nasabah Retail & Priority | Cek saldo & mutasi rekening pribadi, transfer dana (`INTRABANK`, `BI_FAST`, `RTGS`, `LLG`), eksekusi pembayaran Virtual Account. | Isolasi kepemilikan rekening mutlak. Akses lintas CIF menghasilkan HTTP 403 Forbidden. Dibatasi *card tier velocity limit*. |
+| **`MERCHANT`** | Korporasi & Biller VA | Pengelolaan rekening giro korporasi, pembuatan tagihan SNAP-BI Virtual Account untuk pelanggan, monitoring status settlement real-time. | Dibatasi hanya pada portofolio tagihan biller terdaftar. Tidak memiliki akses teller kas. |
+| **`TELLER`** | Operasional Kantor Cabang | Eksekusi transaksi fisik kas cabang: Setor Tunai (`DEPOSIT`) dan Tarik Tunai (`WITHDRAWAL`) nasabah terhadap General Ledger Kas Utama & Cadangan Likuiditas (`GL 1001000001`). | Wajib menyertakan otorisasi CIF nasabah. Seluruh jurnal terhubung langsung ke cadangan brankas kas fisik cabang. |
+| **`CUSTOMER_SERVICE`** | Layanan Administrasi Cabang | Pembukaan rekening tabungan/giro baru, aktivasi status nasabah, dan pembukaan blokir PIN (`PIN_BLOCKED`) akibat 3x kegagalan input PIN. | Otorisasi berbasis verifikasi identitas (KTP/Biometrik). Tidak memiliki wewenang transfer atau manipulasi kas. |
+| **`AUDITOR`** | Pengawas Kepatuhan & OJK | Inspeksi Trial Balance General Ledger (`Total Debit == Total Credit`), pengujian invariansi neraca, dan pemantauan menyeluruh *Regulatory Audit Trail*. | Read-Only mutlak (Zero-Write Policy). Menghasilkan alert ketidaksesuaian neraca jika delta selisih non-nol. |
+| **`ADMIN`** | Administrator Sistem & IT Core | Pengawasan menyeluruh telemetri sistem, manajemen konektor SNAP-BI Open Banking, dan monitoring status gateway. | Wajib autentikasi bertingkat. Seluruh aktivitas audit tercatat dalam immutable log pengawasan. |
 
 ---
 

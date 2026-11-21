@@ -1,0 +1,218 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Masuk — Nusantara Core Banking">
+  <div class="mx-auto max-w-2xl space-y-8 py-4">
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-mono text-primary">
+        ZERO-TRUST RBAC AUTHENTICATION
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        Pilih Peran atau Masuk ke Rekening
+      </h1>
+      <p class="text-xs text-muted-foreground sm:text-sm">
+        Klik salah satu profil perbankan di bawah ini untuk masuk instan dengan kredensial demo pre-seeded.
+      </p>
+    </div>
+
+    {/* 1-Click Fast Login Grid */}
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {/* 1. Customer: Budi */}
+      <button
+        onclick="fastLogin('budi.santoso@cbs-bank.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+            CUSTOMER
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">5240301001</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-primary transition">Budi Santoso</div>
+        <div class="text-xs text-muted-foreground">Nasabah Perorangan &bull; Rekening Rp 500 Juta</div>
+      </button>
+
+      {/* 2. Customer: Siti */}
+      <button
+        onclick="fastLogin('siti.rahma@cbs-bank.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+            CUSTOMER
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">5240302002</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-primary transition">Siti Rahmawati</div>
+        <div class="text-xs text-muted-foreground">Nasabah Perorangan &bull; Rekening Rp 75 Juta</div>
+      </button>
+
+      {/* 3. Merchant */}
+      <button
+        onclick="fastLogin('merchant@tokonusantara.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-blue-400/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-400">
+            MERCHANT
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">Giro 5240308888</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-blue-400 transition">PT Toko Nusantara</div>
+        <div class="text-xs text-muted-foreground">Biller &bull; Virtual Account Generator</div>
+      </button>
+
+      {/* 4. Teller */}
+      <button
+        onclick="fastLogin('teller@cbs-bank.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-amber-400/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+            TELLER
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">Cabang Sudirman</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-amber-400 transition">Rina Wijaya (Head Teller)</div>
+        <div class="text-xs text-muted-foreground">Setor Tunai &amp; Tarik Tunai Kas Bank</div>
+      </button>
+
+      {/* 5. Customer Service */}
+      <button
+        onclick="fastLogin('cs@cbs-bank.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-emerald-400/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+            CUSTOMER_SERVICE
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">Cabang Sudirman</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-emerald-400 transition">Nadia Kusuma (CS)</div>
+        <div class="text-xs text-muted-foreground">Buka Blokir PIN &amp; Onboarding CIF</div>
+      </button>
+
+      {/* 6. Auditor */}
+      <button
+        onclick="fastLogin('auditor@cbs-bank.co.id', 'Password#2026')"
+        class="group flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-purple-400/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-purple-500/10 px-2 py-0.5 text-[10px] font-bold text-purple-400">
+            AUDITOR
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">OJK &bull; Read-Only</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-purple-400 transition">Dr. Prasetyo Wibowo</div>
+        <div class="text-xs text-muted-foreground">Trial Balance &amp; Regulatory Audit Trail</div>
+      </button>
+
+      {/* 7. Super Admin */}
+      <button
+        onclick="fastLogin('admin@cbs-bank.co.id', 'Password#2026')"
+        class="group col-span-1 sm:col-span-2 flex flex-col items-start rounded-2xl border border-border bg-card p-4 text-left transition hover:border-rose-400/50 hover:bg-muted/50"
+      >
+        <div class="flex w-full items-center justify-between pb-2">
+          <span class="rounded-md bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-400">
+            ADMIN
+          </span>
+          <span class="text-[11px] font-mono text-muted-foreground">Master Console</span>
+        </div>
+        <div class="font-bold text-foreground group-hover:text-rose-400 transition">Core Banking Admin</div>
+        <div class="text-xs text-muted-foreground">Akses penuh operasional &bull; Reset Sandbox Trial State</div>
+      </button>
+    </div>
+
+    {/* Custom Manual Credentials Form */}
+    <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+      <div class="border-b border-border pb-3">
+        <h2 class="text-sm font-bold text-card-foreground">Atau Masuk dengan Email &amp; Password</h2>
+      </div>
+
+      <div id="error-box" class="hidden rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-400"></div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Email Perbankan</label>
+          <input
+            type="email"
+            id="email"
+            required
+            placeholder="budi.santoso@cbs-bank.co.id"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Password</label>
+          <input
+            type="password"
+            id="password"
+            required
+            value="Password#2026"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="submit-btn"
+          class="w-full rounded-xl bg-primary py-2.5 text-xs font-bold text-primary-foreground transition hover:brightness-110 shadow-sm shadow-primary/20"
+        >
+          Masuk ke Portal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    async function fastLogin(email, password) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = password;
+      await executeLogin(email, password);
+    }
+
+    async function executeLogin(email, password) {
+      const errorBox = document.getElementById('error-box');
+      const submitBtn = document.getElementById('submit-btn');
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Memverifikasi kredensial...';
+
+      try {
+        const res = await fetch('http://localhost:8080/v1/auth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          errorBox.innerText = json.detail || json.message || 'Login gagal, periksa email & password.';
+          errorBox.classList.remove('hidden');
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Masuk ke Portal';
+          return;
+        }
+
+        const data = json.data;
+        localStorage.setItem('cbs_token', data.access_token);
+        localStorage.setItem('cbs_user', JSON.stringify(data));
+        document.cookie = `cbs_token=${data.access_token}; path=/; max-age=86400; SameSite=Lax`;
+
+        window.location.href = '/portal';
+      } catch (err) {
+        errorBox.innerText = 'Tidak dapat menghubungi server Core Banking backend di localhost:8080.';
+        errorBox.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Masuk ke Portal';
+      }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      await executeLogin(email, password);
+    });
+  </script>
+</Layout>

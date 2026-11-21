@@ -1,0 +1,26 @@
+{
+  "name": "nusantara-core-banking-system-monorepo",
+  "version": "2.4.0",
+  "private": true,
+  "description": "Nusantara Core Banking System (NCBS) Enterprise Monorepo — Rust Axum Core Ledger + Astro SSR Portal",
+  "scripts": {
+    "dev:backend": "cargo run --manifest-path backend/Cargo.toml",
+    "dev:frontend": "cd frontend && pnpm dev",
+    "test:backend": "cargo test --manifest-path backend/Cargo.toml",
+    "build:backend": "cargo build --release --manifest-path backend/Cargo.toml",
+    "build:frontend": "cd frontend && pnpm build",
+    "build": "pnpm build:backend && pnpm build:frontend"
+  },
+  "keywords": [
+    "core-banking",
+    "snap-bi",
+    "double-entry-ledger",
+    "rust",
+    "axum",
+    "astro",
+    "ssr",
+    "ethereal-ui"
+  ],
+  "author": "Saeful Rohman",
+  "license": "MIT"
+}

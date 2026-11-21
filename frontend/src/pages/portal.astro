@@ -1,0 +1,824 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { apiCall, BACKEND_URL } from '../lib/api';
+
+// SSR token extraction from cookies
+const tokenCookie = Astro.cookies.get('cbs_token')?.value;
+
+let user: any = null;
+let trialBalance: any = null;
+let auditLogs: any[] = [];
+let accounts: any[] = [];
+
+if (tokenCookie) {
+  const meRes = await apiCall<any>('/v1/auth/me', { token: tokenCookie });
+  if (meRes.ok) {
+    user = meRes.data;
+    accounts = user?.owned_accounts || [];
+
+    if (user?.role === 'AUDITOR' || user?.role === 'ADMIN') {
+      const tbRes = await apiCall<any>('/v1/ledger/trial-balance', { token: tokenCookie });
+      if (tbRes.ok) trialBalance = tbRes.data;
+
+      const auditRes = await apiCall<any[]>('/v1/audit-logs', { token: tokenCookie });
+      if (auditRes.ok) auditLogs = auditRes.data || [];
+    }
+  }
+}
+---
+
+<Layout title="Enterprise Portal — NCBS" activeRole={user?.role} fullName={user?.full_name} cifNumber={user?.cif_number}>
+  <div id="portal-root" class="space-y-6">
+    {/* Telemetry Header Bar */}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span id="role-badge" class="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary border border-primary/20">
+            {user?.role || 'MEMUAT PERAN...'}
+          </span>
+          <span id="cif-text" class="text-xs font-mono text-muted-foreground">
+            {user?.cif_number || 'CIF-PENDING'}
+          </span>
+        </div>
+        <h1 id="user-name" class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          {user?.full_name || 'Portal Perbankan Nusantara'}
+        </h1>
+        <p id="user-email" class="text-xs text-muted-foreground font-mono">
+          {user?.email || 'Memuat kredensial autentikasi...'}
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          onclick="window.location.reload()"
+          class="rounded-xl border border-border bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground hover:bg-muted transition flex items-center gap-1.5"
+        >
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh Data
+        </button>
+
+        <a
+          href="/login"
+          class="rounded-xl border border-border bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground hover:bg-muted transition"
+        >
+          Ganti Akun Demo
+        </a>
+      </div>
+    </div>
+
+    {/* Dynamic Alert Banner */}
+    <div id="alert-banner" class="hidden rounded-xl border p-4 text-xs"></div>
+
+    {/* ========================================================================= */}
+    {/* 1. CUSTOMER & MERCHANT VIEW */}
+    {/* ========================================================================= */}
+    <div id="customer-section" class="space-y-6">
+      {/* Accounts & Cards Overview */}
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Main Balance Card */}
+        <div class="rounded-2xl border border-border bg-gradient-to-br from-card to-secondary/30 p-6 shadow-sm space-y-4 lg:col-span-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono text-muted-foreground uppercase tracking-wider">Saldo Rekening Utama</span>
+            <span id="card-tier-badge" class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
+              PRIORITY TIER
+            </span>
+          </div>
+
+          <div class="space-y-1">
+            <div id="main-balance" class="text-3xl sm:text-4xl font-extrabold font-mono text-foreground tracking-tight">
+              Rp 500.000.000
+            </div>
+            <div class="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+              <span>Nomor Rekening:</span>
+              <span id="account-no" class="font-bold text-foreground">5240301001</span>
+              <span>&bull; IDR</span>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-border flex flex-wrap gap-2.5">
+            <button
+              onclick="openTransferModal()"
+              class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110 shadow-sm shadow-primary/20 transition flex items-center gap-1.5"
+            >
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              Transfer Dana
+            </button>
+            <button
+              onclick="openPayVAModal()"
+              class="rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-bold text-secondary-foreground hover:bg-muted transition flex items-center gap-1.5"
+            >
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Bayar Virtual Account
+            </button>
+            <button
+              id="merchant-create-va-btn"
+              onclick="openCreateVAModal()"
+              class="hidden rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500 transition flex items-center gap-1.5"
+            >
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Buat Tagihan VA (Merchant)
+            </button>
+          </div>
+        </div>
+
+        {/* Daily Velocity Limit Card */}
+        <div class="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="text-xs font-mono text-muted-foreground uppercase tracking-wider">Limit Harian (Daily Limit)</span>
+            <div class="text-xl font-bold font-mono text-foreground" id="daily-limit-text">
+              Rp 1.000.000.000 / hari
+            </div>
+            <p class="text-[11px] text-muted-foreground">
+              Batas transfer harian dihitung berdasarkan kartu tier (Priority, Platinum, Gold, Silver).
+            </p>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-[11px] font-mono text-muted-foreground">
+              <span>Status Rekening:</span>
+              <span id="account-status-badge" class="font-bold text-emerald-400">ACTIVE</span>
+            </div>
+            <div class="h-2 w-full rounded-full bg-muted overflow-hidden">
+              <div class="h-full bg-primary rounded-full" style="width: 15%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mutation Statement Table */}
+      <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-border pb-3">
+          <div>
+            <h2 class="text-base font-bold text-card-foreground">Mutasi Rekening (Double-Entry Statement)</h2>
+            <p class="text-xs text-muted-foreground">Riwayat posting debit dan kredit terverifikasi</p>
+          </div>
+          <span class="text-xs font-mono text-muted-foreground">Imutable Journal Postings</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-border font-mono text-muted-foreground">
+              <tr>
+                <th class="pb-2.5">WAKTU</th>
+                <th class="pb-2.5">KETERANGAN / NARRATION</th>
+                <th class="pb-2.5">ARAH</th>
+                <th class="pb-2.5 text-right">JUMLAH</th>
+                <th class="pb-2.5 text-right">SALDO AKHIR</th>
+              </tr>
+            </thead>
+            <tbody id="statement-tbody" class="divide-y divide-border">
+              <tr>
+                <td colspan="5" class="py-4 text-center text-muted-foreground font-mono">Memuat mutasi rekening...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {/* ========================================================================= */}
+    {/* 2. TELLER CASH COUNTER DESK */}
+    {/* ========================================================================= */}
+    <div id="teller-section" class="hidden space-y-6">
+      <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div class="border-b border-border pb-3">
+          <h2 class="text-base font-bold text-card-foreground flex items-center gap-2">
+            <span class="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs text-amber-400 font-mono">TELLER DESK</span>
+            Counter Transaksi Kas Cabang (Setor &amp; Tarik Tunai)
+          </h2>
+          <p class="text-xs text-muted-foreground">
+            Eksekusi transaksi kas tunai langsung terhadap akun counterparty <strong>GL Kas Utama &amp; Cadangan Likuiditas Bank (1001000001)</strong>.
+          </p>
+        </div>
+
+        <form id="cash-form" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end">
+          <div>
+            <label class="block text-xs font-semibold text-muted-foreground pb-1">Nomor Rekening Nasabah</label>
+            <input
+              type="text"
+              id="cash-account-no"
+              required
+              value="5240301001"
+              placeholder="Contoh: 5240301001"
+              class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-muted-foreground pb-1">Operasi Kas</label>
+            <select
+              id="cash-operation"
+              class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="DEPOSIT">SETOR TUNAI (DEPOSIT)</option>
+              <option value="WITHDRAWAL">TARIK TUNAI (WITHDRAWAL)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-muted-foreground pb-1">Nominal Tunai (IDR)</label>
+            <input
+              type="number"
+              id="cash-amount"
+              required
+              value="15000000"
+              placeholder="15000000"
+              class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              id="cash-submit-btn"
+              class="w-full rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-black hover:bg-amber-400 transition shadow-sm"
+            >
+              Proses Transaksi Kas
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {/* ========================================================================= */}
+    {/* 3. CUSTOMER SERVICE (CS) DESK */}
+    {/* ========================================================================= */}
+    <div id="cs-section" class="hidden space-y-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Unblock PIN */}
+        <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+          <div class="border-b border-border pb-3">
+            <h2 class="text-base font-bold text-card-foreground flex items-center gap-2">
+              <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400 font-mono">CS DESK</span>
+              Buka Blokir PIN (Unblock PIN)
+            </h2>
+            <p class="text-xs text-muted-foreground">
+              Membuka blokir rekening nasabah yang terkunci karena 3 kali salah memasukkan PIN (status PIN_BLOCKED).
+            </p>
+          </div>
+
+          <form id="unblock-pin-form" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground pb-1">Nomor Rekening</label>
+              <input
+                type="text"
+                id="unblock-account-no"
+                required
+                placeholder="5240301001"
+                class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground pb-1">PIN Baru (6 Digit)</label>
+              <input
+                type="password"
+                id="unblock-new-pin"
+                required
+                maxlength="6"
+                placeholder="123456"
+                class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition"
+            >
+              Buka Blokir &amp; Reset PIN
+            </button>
+          </form>
+        </div>
+
+        {/* Change Account Status */}
+        <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+          <div class="border-b border-border pb-3">
+            <h2 class="text-base font-bold text-card-foreground">Manajemen Status Rekening</h2>
+            <p class="text-xs text-muted-foreground">Aktivasi, pembekuan darurat (FROZEN), atau penutupan rekening.</p>
+          </div>
+
+          <form id="status-form" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground pb-1">Nomor Rekening</label>
+              <input
+                type="text"
+                id="status-account-no"
+                required
+                placeholder="5240301001"
+                class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-muted-foreground pb-1">Status Baru</label>
+              <select
+                id="new-status"
+                class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+              >
+                <option value="ACTIVE">ACTIVE (Aktif Normal)</option>
+                <option value="FROZEN">FROZEN (Dibekukan)</option>
+                <option value="DORMANT">DORMANT (Pasif)</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              class="w-full rounded-xl border border-border bg-secondary px-4 py-2 text-xs font-bold text-secondary-foreground hover:bg-muted transition"
+            >
+              Perbarui Status Rekening
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {/* ========================================================================= */}
+    {/* 4. AUDITOR & OJK VIEW (Trial Balance & Audit Trail) */}
+    {/* ========================================================================= */}
+    <div id="auditor-section" class="hidden space-y-6">
+      {/* Live Trial Balance Verification */}
+      <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-border pb-3">
+          <div>
+            <h2 class="text-base font-bold text-card-foreground flex items-center gap-2">
+              <span class="rounded-md bg-purple-500/10 px-2 py-0.5 text-xs text-purple-400 font-mono">OJK AUDIT</span>
+              Trial Balance Buku Besar (General Ledger Invariant)
+            </h2>
+            <p class="text-xs text-muted-foreground">Pembuktian integritas matematis double-entry: Total Debit == Total Credit</p>
+          </div>
+          <span id="tb-badge" class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20 font-mono">
+            {trialBalance?.is_balanced ? '100% BALANCED' : 'VERIFIED'}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="rounded-xl border border-border bg-muted/30 p-4">
+            <span class="text-xs text-muted-foreground font-mono">TOTAL DEBIT POSTINGS</span>
+            <div id="tb-debit" class="text-xl font-bold font-mono text-foreground mt-1">
+              Rp {trialBalance ? (trialBalance.total_debit_postings).toLocaleString('id-ID') : '0'}
+            </div>
+          </div>
+          <div class="rounded-xl border border-border bg-muted/30 p-4">
+            <span class="text-xs text-muted-foreground font-mono">TOTAL CREDIT POSTINGS</span>
+            <div id="tb-credit" class="text-xl font-bold font-mono text-foreground mt-1">
+              Rp {trialBalance ? (trialBalance.total_credit_postings).toLocaleString('id-ID') : '0'}
+            </div>
+          </div>
+          <div class="rounded-xl border border-border bg-muted/30 p-4">
+            <span class="text-xs text-muted-foreground font-mono">DISCREPANCY (SELISIH)</span>
+            <div id="tb-disc" class="text-xl font-bold font-mono text-emerald-400 mt-1">
+              Rp {trialBalance ? (trialBalance.discrepancy).toLocaleString('id-ID') : '0'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Regulatory Audit Trail */}
+      <div class="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div class="border-b border-border pb-3">
+          <h2 class="text-base font-bold text-card-foreground">Regulatory Audit Trail (OJK &amp; BI Compliance)</h2>
+          <p class="text-xs text-muted-foreground">Catatan aktivitas finansial dan administratif lengkap dengan IP address &amp; Trace ID</p>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-border font-mono text-muted-foreground">
+              <tr>
+                <th class="pb-2.5">WAKTU</th>
+                <th class="pb-2.5">AKSI</th>
+                <th class="pb-2.5">RESOURCE</th>
+                <th class="pb-2.5">IP ADDRESS</th>
+                <th class="pb-2.5 font-mono">TRACE ID</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody" class="divide-y divide-border">
+              {auditLogs.length > 0 ? (
+                auditLogs.map((log) => (
+                  <tr>
+                    <td class="py-2.5 font-mono text-muted-foreground">{new Date(log.created_at).toLocaleString('id-ID')}</td>
+                    <td class="py-2.5 font-bold text-primary font-mono">{log.action}</td>
+                    <td class="py-2.5 text-foreground">{log.resource_name} ({log.resource_id})</td>
+                    <td class="py-2.5 font-mono text-muted-foreground">{log.ip_address}</td>
+                    <td class="py-2.5 font-mono text-[11px] text-muted-foreground">{log.trace_id}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colspan="5" class="py-4 text-center text-muted-foreground font-mono">Tidak ada catatan audit terbaru.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {/* ========================================================================= */}
+    {/* 5. ADMIN COMMAND CENTER */}
+    {/* ========================================================================= */}
+    <div id="admin-section" class="hidden space-y-6">
+      <div class="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-border pb-3">
+          <div>
+            <h2 class="text-base font-bold text-rose-400">Trial Sandbox Controller</h2>
+            <p class="text-xs text-muted-foreground">Reset saldo rekening, Virtual Account, dan buku besar kembali ke genesis balance.</p>
+          </div>
+          <button
+            onclick="executeResetSandbox()"
+            id="reset-sandbox-btn"
+            class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 transition shadow-sm"
+          >
+            Reset Sandbox Genesis
+          </button>
+        </div>
+        <div class="text-xs font-mono text-muted-foreground">
+          Master Sandbox Key: <code class="rounded bg-muted px-1.5 py-0.5 text-primary">cbs_live_snap_sandbox_2026</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* ========================================================================= */}
+  {/* MODAL: TRANSFER DANA */}
+  {/* ========================================================================= */}
+  <div id="transfer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h3 class="text-base font-bold text-foreground">Transfer Dana Perbankan</h3>
+        <button onclick="closeTransferModal()" class="text-muted-foreground hover:text-foreground text-sm font-bold">&times;</button>
+      </div>
+
+      <form id="transfer-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Rekening Sumber (Payer)</label>
+          <input
+            type="text"
+            id="tf-source"
+            readonly
+            value="5240301001"
+            class="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground font-mono"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Kanal Transfer (Channel)</label>
+          <select
+            id="tf-channel"
+            onchange="updateFeePreview()"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+          >
+            <option value="INTRABANK">INTRABANK (Sesama Bank — Biaya Rp 0)</option>
+            <option value="BI_FAST">BI-FAST (Antar Bank — Biaya Rp 2.500)</option>
+            <option value="RTGS">RTGS (Nilai Besar Real-Time — Biaya Rp 25.000)</option>
+            <option value="LLG">LLG / SKNBI (Kliring — Biaya Rp 2.900)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Rekening Tujuan</label>
+          <input
+            type="text"
+            id="tf-dest"
+            required
+            value="5240302002"
+            placeholder="Nomor rekening tujuan"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Nominal Transfer (IDR)</label>
+          <input
+            type="number"
+            id="tf-amount"
+            required
+            value="5000000"
+            placeholder="5000000"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">PIN Transaksi (6 Digit)</label>
+          <input
+            type="password"
+            id="tf-pin"
+            required
+            maxlength="6"
+            value="123456"
+            placeholder="PIN 6 digit"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div class="rounded-xl border border-border bg-muted/30 p-2.5 text-[11px] font-mono text-muted-foreground flex justify-between">
+          <span>Biaya Admin:</span>
+          <span id="fee-preview" class="font-bold text-foreground">Rp 0</span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeTransferModal()" class="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
+            Batal
+          </button>
+          <button type="submit" id="tf-submit-btn" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110">
+            Kirim Transfer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {/* ========================================================================= */}
+  {/* MODAL: BAYAR VIRTUAL ACCOUNT */}
+  {/* ========================================================================= */}
+  <div id="pay-va-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-border pb-3">
+        <h3 class="text-base font-bold text-foreground">Bayar Virtual Account</h3>
+        <button onclick="closePayVAModal()" class="text-muted-foreground hover:text-foreground text-sm font-bold">&times;</button>
+      </div>
+
+      <form id="pay-va-form" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">Nomor Virtual Account</label>
+          <input
+            type="text"
+            id="va-number"
+            required
+            value="88000081290001001"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-muted-foreground pb-1">PIN Transaksi</label>
+          <input
+            type="password"
+            id="va-pin"
+            required
+            maxlength="6"
+            value="123456"
+            class="w-full rounded-xl border border-border bg-muted/60 px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closePayVAModal()" class="rounded-xl border border-border px-4 py-2 text-xs text-muted-foreground hover:text-foreground">
+            Batal
+          </button>
+          <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:brightness-110">
+            Bayar Tagihan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    let activeToken = localStorage.getItem('cbs_token') || '';
+    let currentUser = JSON.parse(localStorage.getItem('cbs_user') || 'null');
+
+    // Auto-redirect if not logged in
+    if (!activeToken && !currentUser) {
+      window.location.href = '/login';
+    }
+
+    // Initialize UI based on active user role
+    function initPortal() {
+      if (!currentUser) return;
+
+      document.getElementById('role-badge').innerText = currentUser.role;
+      document.getElementById('cif-text').innerText = currentUser.cif_number;
+      document.getElementById('user-name').innerText = currentUser.full_name;
+      document.getElementById('user-email').innerText = currentUser.email;
+
+      const role = currentUser.role;
+
+      // Show/hide sections based on RBAC
+      if (role === 'TELLER') {
+        document.getElementById('teller-section').classList.remove('hidden');
+      } else if (role === 'CUSTOMER_SERVICE') {
+        document.getElementById('cs-section').classList.remove('hidden');
+      } else if (role === 'AUDITOR') {
+        document.getElementById('auditor-section').classList.remove('hidden');
+      } else if (role === 'ADMIN') {
+        document.getElementById('teller-section').classList.remove('hidden');
+        document.getElementById('cs-section').classList.remove('hidden');
+        document.getElementById('auditor-section').classList.remove('hidden');
+        document.getElementById('admin-section').classList.remove('hidden');
+        document.getElementById('merchant-create-va-btn')?.classList.remove('hidden');
+      } else if (role === 'MERCHANT') {
+        document.getElementById('merchant-create-va-btn')?.classList.remove('hidden');
+      }
+
+      // Populate accounts
+      if (currentUser.accounts && currentUser.accounts.length > 0) {
+        const acc = currentUser.accounts[0];
+        document.getElementById('main-balance').innerText = 'Rp ' + Number(acc.balance).toLocaleString('id-ID');
+        document.getElementById('account-no').innerText = acc.account_number;
+        document.getElementById('card-tier-badge').innerText = acc.card_tier + ' TIER';
+        document.getElementById('tf-source').value = acc.account_number;
+
+        fetchStatement(acc.account_number);
+      }
+    }
+
+    async function fetchStatement(accountNumber) {
+      try {
+        const res = await fetch(`http://localhost:8080/v1/accounts/${accountNumber}/statement`, {
+          headers: { 'Authorization': `Bearer ${activeToken}` },
+        });
+        const json = await res.json();
+        const tbody = document.getElementById('statement-tbody');
+        if (!res.ok || !json.data || json.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-muted-foreground font-mono">Belum ada transaksi.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = json.data.map(item => `
+          <tr>
+            <td class="py-2.5 font-mono text-muted-foreground">${new Date(item.created_at).toLocaleString('id-ID')}</td>
+            <td class="py-2.5 font-medium text-foreground">${item.narration}</td>
+            <td class="py-2.5 font-mono font-bold ${item.direction === 'CREDIT' ? 'text-emerald-400' : 'text-rose-400'}">
+              ${item.direction}
+            </td>
+            <td class="py-2.5 text-right font-mono font-bold ${item.direction === 'CREDIT' ? 'text-emerald-400' : 'text-rose-400'}">
+              ${item.direction === 'CREDIT' ? '+' : '-'}Rp ${Number(item.amount).toLocaleString('id-ID')}
+            </td>
+            <td class="py-2.5 text-right font-mono text-muted-foreground">Rp ${Number(item.balance_after).toLocaleString('id-ID')}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function showAlert(msg, isSuccess = true) {
+      const banner = document.getElementById('alert-banner');
+      banner.className = `rounded-xl border p-4 text-xs font-semibold ${isSuccess ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-rose-500/20 bg-rose-500/10 text-rose-400'}`;
+      banner.innerText = msg;
+      banner.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openTransferModal() {
+      document.getElementById('transfer-modal').classList.remove('hidden');
+    }
+    function closeTransferModal() {
+      document.getElementById('transfer-modal').classList.add('hidden');
+    }
+    function openPayVAModal() {
+      document.getElementById('pay-va-modal').classList.remove('hidden');
+    }
+    function closePayVAModal() {
+      document.getElementById('pay-va-modal').classList.add('hidden');
+    }
+
+    function updateFeePreview() {
+      const ch = document.getElementById('tf-channel').value;
+      const fees = { 'INTRABANK': 'Rp 0', 'BI_FAST': 'Rp 2.500', 'RTGS': 'Rp 25.000', 'LLG': 'Rp 2.900' };
+      document.getElementById('fee-preview').innerText = fees[ch] || 'Rp 0';
+    }
+
+    // Transfer Submit
+    document.getElementById('transfer-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('tf-submit-btn');
+      btn.disabled = true;
+      btn.innerText = 'Mengirim...';
+
+      const payload = {
+        source_account_number: document.getElementById('tf-source').value,
+        destination_account_number: document.getElementById('tf-dest').value,
+        channel: document.getElementById('tf-channel').value,
+        amount: Number(document.getElementById('tf-amount').value),
+        pin: document.getElementById('tf-pin').value,
+        description: 'Transfer via Portal Web',
+      };
+
+      try {
+        const res = await fetch('http://localhost:8080/v1/transactions/transfer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`,
+            'X-Idempotency-Key': 'web-tf-' + Date.now(),
+          },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        btn.disabled = false;
+        btn.innerText = 'Kirim Transfer';
+
+        if (!res.ok) {
+          alert(json.detail || json.message || 'Transfer gagal diproses');
+          return;
+        }
+
+        closeTransferModal();
+        showAlert(`Transfer berhasil! Ref: ${json.data.reference_no} sebesar Rp ${Number(json.data.amount).toLocaleString('id-ID')}`);
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerText = 'Kirim Transfer';
+        alert('Gagal menghubungi backend API');
+      }
+    });
+
+    // Pay VA Submit
+    document.getElementById('pay-va-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const vaNo = document.getElementById('va-number').value;
+      const pin = document.getElementById('va-pin').value;
+      const sourceAcc = currentUser?.accounts?.[0]?.account_number || '5240301001';
+
+      try {
+        const res = await fetch(`http://localhost:8080/v1/virtual-accounts/${vaNo}/pay`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`,
+            'X-Idempotency-Key': 'web-va-' + Date.now(),
+          },
+          body: JSON.stringify({ source_account_number: sourceAcc, pin }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          alert(json.detail || json.message || 'Pembayaran VA gagal');
+          return;
+        }
+
+        closePayVAModal();
+        showAlert(`Virtual Account ${vaNo} berhasil dibayar lunas!`);
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (e) {
+        alert('Gagal menghubungi backend API');
+      }
+    });
+
+    // Teller Cash Submit
+    document.getElementById('cash-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const accNo = document.getElementById('cash-account-no').value;
+      const op = document.getElementById('cash-operation').value;
+      const amount = Number(document.getElementById('cash-amount').value);
+
+      try {
+        const res = await fetch('http://localhost:8080/v1/transactions/cash', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`,
+            'X-Idempotency-Key': 'web-cash-' + Date.now(),
+          },
+          body: JSON.stringify({ account_number: accNo, operation: op, amount, description: 'Counter Cabang' }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          alert(json.detail || json.message || 'Transaksi kas gagal');
+          return;
+        }
+        showAlert(`Transaksi kas ${op} Rp ${amount.toLocaleString('id-ID')} ke ${accNo} berhasil diselesaikan!`);
+      } catch (e) {
+        alert('Gagal memproses transaksi kas');
+      }
+    });
+
+    // Unblock PIN Submit
+    document.getElementById('unblock-pin-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const accNo = document.getElementById('unblock-account-no').value;
+      const newPin = document.getElementById('unblock-new-pin').value;
+
+      try {
+        const res = await fetch(`http://localhost:8080/v1/accounts/${accNo}/unblock-pin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${activeToken}`,
+          },
+          body: JSON.stringify({ new_pin: newPin, reason: 'Verifikasi CS Cabang' }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          alert(json.detail || json.message || 'Gagal unblock PIN');
+          return;
+        }
+        showAlert(`PIN untuk rekening ${accNo} berhasil direset dan blokir dibuka! Status: ACTIVE`);
+      } catch (e) {
+        alert('Gagal unblock PIN');
+      }
+    });
+
+    // Admin Reset Sandbox
+    async function executeResetSandbox() {
+      if (!confirm('Apakah Anda yakin ingin me-reset seluruh saldo & rekening sandbox ke nilai genesis?')) return;
+      try {
+        const res = await fetch('http://localhost:8080/v1/system/reset', { method: 'POST' });
+        const json = await res.json();
+        showAlert(json.message || 'Sandbox berhasil di-reset!');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (e) {
+        alert('Gagal me-reset sandbox');
+      }
+    }
+
+    // Run on mount
+    initPortal();
+  </script>
+</Layout>

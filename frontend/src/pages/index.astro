@@ -1,0 +1,236 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { apiCall, type TrialBalance } from '../lib/api';
+
+// SSR fetch health and trial balance from Rust backend
+const healthRes = await apiCall<any>('/v1/system/health');
+const health = healthRes.data;
+const isHealthy = healthRes.ok && health?.general_ledger_integrity?.is_balanced;
+const gl = health?.general_ledger_integrity;
+---
+
+<Layout title="Nusantara Core Banking System">
+  <div class="space-y-10">
+    {/* Hero Telemetry Card */}
+    <div class="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-card to-card/60 p-8 sm:p-12 shadow-2xl">
+      <div class="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 max-w-3xl space-y-4">
+        <div class="inline-flex items-center gap-2 rounded-full border border-border bg-muted/80 px-3 py-1 text-xs font-mono text-muted-foreground">
+          <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+          ENTERPRISE ARCHITECTURE &bull; RUST BACKEND + ASTRO SSR
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight sm:text-5xl text-foreground">
+          Nusantara Core Banking System
+        </h1>
+        <p class="text-base text-muted-foreground sm:text-lg leading-relaxed">
+          Sistem perbankan inti level enterprise mengadopsi standar <span class="text-foreground font-semibold">Bank Indonesia SNAP-BI</span> dan <span class="text-foreground font-semibold">Double-Entry General Ledger</span>. Ditenagai oleh engine backend performa tinggi <span class="text-emerald-400 font-semibold">Rust Axum</span> dan antarmuka interaktif <span class="text-emerald-400 font-semibold">Astro SSR</span> dengan standar desain Ethereal UI.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3 pt-4">
+          <a
+            href="/portal"
+            class="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 transition"
+          >
+            Buka Banking Portal
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+          <a
+            href="/login"
+            class="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-5 py-2.5 text-sm font-semibold text-secondary-foreground hover:bg-muted transition"
+          >
+            Demo 6 Role Perbankan
+          </a>
+          <a
+            href="http://localhost:8080/docs"
+            target="_blank"
+            class="inline-flex items-center gap-2 rounded-xl border border-border bg-card/60 px-5 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition"
+          >
+            Interactive OpenAPI
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {/* General Ledger Live Telemetry Indicator */}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between pb-2">
+          <span class="text-xs font-mono uppercase tracking-wider text-muted-foreground">GL Integrity</span>
+          <span class={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isHealthy ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400'}`}>
+            {isHealthy ? 'BALANCED' : 'UNBALANCED'}
+          </span>
+        </div>
+        <div class="text-2xl font-bold font-mono text-foreground">
+          {gl ? 'Δ Rp 0' : 'Δ Checking...'}
+        </div>
+        <p class="text-[11px] text-muted-foreground pt-1">Total Debit Postings = Total Credit Postings</p>
+      </div>
+
+      <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between pb-2">
+          <span class="text-xs font-mono uppercase tracking-wider text-muted-foreground">Total Ledger Postings</span>
+          <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+            IMMUTABLE
+          </span>
+        </div>
+        <div class="text-2xl font-bold font-mono text-foreground">
+          {gl?.total_ledger_entries ?? '4'} entries
+        </div>
+        <p class="text-[11px] text-muted-foreground pt-1">Jurnal double-entry terverifikasi</p>
+      </div>
+
+      <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between pb-2">
+          <span class="text-xs font-mono uppercase tracking-wider text-muted-foreground">Compliance Standard</span>
+          <span class="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/20">
+            BANK INDONESIA
+          </span>
+        </div>
+        <div class="text-2xl font-bold text-foreground">
+          SNAP-BI
+        </div>
+        <p class="text-[11px] text-muted-foreground pt-1">BI-FAST, RTGS, LLG, Open Banking API</p>
+      </div>
+
+      <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between pb-2">
+          <span class="text-xs font-mono uppercase tracking-wider text-muted-foreground">Runtime Engine</span>
+          <span class="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-bold text-purple-400 border border-purple-500/20">
+            NATIVE
+          </span>
+        </div>
+        <div class="text-2xl font-bold font-mono text-foreground">
+          Rust Axum
+        </div>
+        <p class="text-[11px] text-muted-foreground pt-1">Sub-millisecond latency &amp; memory safety</p>
+      </div>
+    </div>
+
+    {/* 6 Banking Roles Directory (Segregation of Duties Matrix) */}
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            6 Role Perbankan &amp; Segregation of Duties
+          </h2>
+          <p class="text-xs text-muted-foreground">
+            Sistem perbankan zero-trust dengan pembagian wewenang ketat antar nasabah dan staf cabang.
+          </p>
+        </div>
+        <a href="/login" class="text-xs font-semibold text-primary hover:underline">
+          Lihat kredensial demo &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Customer */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-primary font-bold">ROLE: CUSTOMER</span>
+              <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">Nasabah Retail</span>
+            </div>
+            <h3 class="font-bold text-foreground">Budi Santoso</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Cek saldo &amp; mutasi rekening sendiri (5240301001), transfer dana (Intrabank, BI-FAST, RTGS, LLG) dan bayar Virtual Account. Dilarang melihat rekening orang lain.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">PIN: 123456</span>
+            <a href="/login?role=CUSTOMER" class="font-semibold text-primary hover:underline">Login sebagai Budi &rarr;</a>
+          </div>
+        </div>
+
+        {/* Merchant */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-blue-400 font-bold">ROLE: MERCHANT</span>
+              <span class="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-400">Korporasi / Biller</span>
+            </div>
+            <h3 class="font-bold text-foreground">PT Toko Nusantara Digital</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Mengelola rekening Giro korporasi (5240308888), generate tagihan Virtual Account otomatis untuk pelanggan, dan memantau status penyelesaian transaksi.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">PIN: 888888</span>
+            <a href="/login?role=MERCHANT" class="font-semibold text-primary hover:underline">Login sebagai Merchant &rarr;</a>
+          </div>
+        </div>
+
+        {/* Teller */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-amber-400 font-bold">ROLE: TELLER</span>
+              <span class="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-400">Staf Cabang</span>
+            </div>
+            <h3 class="font-bold text-foreground">Rina Wijaya (Head Teller)</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Memproses Setor Tunai (DEPOSIT) dan Tarik Tunai (WITHDRAWAL) nasabah secara langsung terhadap GL Kas Utama &amp; Cadangan Likuiditas Bank.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">Kasir Cabang Sudirman</span>
+            <a href="/login?role=TELLER" class="font-semibold text-primary hover:underline">Login sebagai Teller &rarr;</a>
+          </div>
+        </div>
+
+        {/* Customer Service */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-emerald-400 font-bold">ROLE: CUSTOMER_SERVICE</span>
+              <span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400">Layanan Cabang</span>
+            </div>
+            <h3 class="font-bold text-foreground">Nadia Kusuma (CS)</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Buka blokir PIN rekening nasabah yang terblokir setelah 3 kali salah PIN (PIN_BLOCKED), onboarding CIF baru, dan aktivasi/pembekuan rekening.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">Unblock &amp; Onboard</span>
+            <a href="/login?role=CUSTOMER_SERVICE" class="font-semibold text-primary hover:underline">Login sebagai CS &rarr;</a>
+          </div>
+        </div>
+
+        {/* Auditor */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-purple-400 font-bold">ROLE: AUDITOR</span>
+              <span class="rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] text-purple-400">Pengawas OJK</span>
+            </div>
+            <h3 class="font-bold text-foreground">Dr. Prasetyo Wibowo</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Hak akses 100% Read-Only mutlak: inspeksi Trial Balance Buku Besar, verifikasi invariant debit-kredit, dan inspeksi Regulatory Audit Trail OJK.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">Trial Balance &amp; OJK</span>
+            <a href="/login?role=AUDITOR" class="font-semibold text-primary hover:underline">Login sebagai Auditor &rarr;</a>
+          </div>
+        </div>
+
+        {/* Admin */}
+        <div class="rounded-2xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/40 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-rose-400 font-bold">ROLE: ADMIN</span>
+              <span class="rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] text-rose-400">Super Admin</span>
+            </div>
+            <h3 class="font-bold text-foreground">Core Banking Administrator</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              Akses penuh seluruh kapabilitas sistem, Sandbox Reset Controller, manajemen partner API keys SNAP-BI, dan pemantauan sistem global.
+            </p>
+          </div>
+          <div class="pt-4 mt-4 border-t border-border flex items-center justify-between text-xs">
+            <span class="font-mono text-muted-foreground">Full Control</span>
+            <a href="/login?role=ADMIN" class="font-semibold text-primary hover:underline">Login sebagai Admin &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

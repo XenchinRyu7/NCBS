@@ -1,25 +1,42 @@
-# Binaries
+# Rust build artifacts
+target/
+**/target/
+Cargo.lock
+
+# Node / Astro
+node_modules/
+**/node_modules/
+.astro/
+**/.astro/
+dist/
+**/dist/
+
+# Binaries & Executables
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 bin/
-dist/
 
-# Test binary, built with `go test -c`
+# Test binaries & caches
 *.test
 *.out
+*.log
+.pnpm-debug.log*
 
 # Environment variables
 .env
 .env.local
+.env.*.local
 
-# Vercel
+# Vercel & Deployment
 .vercel
 
-# IDE
+# IDE & OS files
 .idea/
 .vscode/
 *.swp
-
+*.swo
+.DS_Store
+Thumbs.db

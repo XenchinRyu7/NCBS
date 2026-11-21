@@ -69,6 +69,22 @@
       html.setAttribute('data-color-theme', theme);
       if (themeSelect) themeSelect.value = theme;
       localStorage.setItem('cbs_color_theme', theme);
+
+      // Sesuai panduan theming.mdx Ethereal UI
+      if (theme === 'default') {
+        const activeLink = document.getElementById('ethereal-active-theme');
+        if (activeLink) activeLink.remove();
+        return;
+      }
+
+      let link = document.getElementById('ethereal-active-theme');
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'ethereal-active-theme';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+      link.href = `/themes/${theme}.css`;
     }
 
     applyMode(storedMode);

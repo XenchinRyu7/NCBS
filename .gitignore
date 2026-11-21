@@ -40,3 +40,4 @@ bin/
 *.swo
 .DS_Store
 Thumbs.db
+theming.mdx

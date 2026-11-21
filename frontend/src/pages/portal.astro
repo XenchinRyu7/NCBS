@@ -58,6 +58,13 @@ if (tokenCookie) {
         document.documentElement.classList.remove('dark');
       }
       document.documentElement.setAttribute('data-color-theme', color);
+      if (color !== 'default') {
+        const link = document.createElement('link');
+        link.id = 'ethereal-active-theme';
+        link.rel = 'stylesheet';
+        link.href = `/themes/${color}.css`;
+        document.head.appendChild(link);
+      }
     </script>
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased flex flex-col md:flex-row selection:bg-primary/20 selection:text-primary">

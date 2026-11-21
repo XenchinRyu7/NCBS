@@ -28,7 +28,7 @@ const {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <script is:inline>
-      // Prevent theme flash on load with official Ethereal OKLCH themes
+      // Sesuai panduan theming.mdx Ethereal UI
       const mode = localStorage.getItem('cbs_theme_mode') || 'dark';
       const color = localStorage.getItem('cbs_color_theme') || 'claude';
       if (mode === 'dark') {
@@ -39,6 +39,13 @@ const {
         document.documentElement.classList.remove('dark');
       }
       document.documentElement.setAttribute('data-color-theme', color);
+      if (color !== 'default') {
+        const link = document.createElement('link');
+        link.id = 'ethereal-active-theme';
+        link.rel = 'stylesheet';
+        link.href = `/themes/${color}.css`;
+        document.head.appendChild(link);
+      }
     </script>
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">

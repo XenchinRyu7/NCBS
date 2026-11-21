@@ -92,9 +92,9 @@ export default async function handler(req, res) {
             fs.writeFileSync(indexFile, wrapperContent);
 
             vcConfig.handler = 'index.mjs';
-            vcConfig.runtime = 'nodejs20.x';
+            vcConfig.runtime = 'nodejs24.x';
             fs.writeFileSync(vcConfigFile, JSON.stringify(vcConfig, null, 2));
-            console.log(`[prepare-vercel] ✓ Set clean root index.mjs handler and nodejs20.x in ${vcConfigFile}`);
+            console.log(`[prepare-vercel] ✓ Set clean root index.mjs handler and nodejs24.x in ${vcConfigFile}`);
           } catch (e) {
             console.warn('[prepare-vercel] Could not patch .vc-config.json:', e.message);
           }

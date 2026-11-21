@@ -186,7 +186,7 @@ import ThemeToggle from '../components/ThemeToggle.astro';
         const password = passwordInput.value;
 
         try {
-          const res = await fetch('http://localhost:8080/v1/auth/token', {
+          const res = await fetch('/v1/auth/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -211,7 +211,7 @@ import ThemeToggle from '../components/ThemeToggle.astro';
           window.location.replace('/portal');
         } catch (err) {
           errorTitle.innerText = 'Koneksi Gateway Gagal';
-          errorDesc.innerText = 'Tidak dapat menghubungi server Core Banking di localhost:8080. Pastikan backend Rust aktif.';
+          errorDesc.innerText = 'Tidak dapat menghubungi server Core Banking Gateway. Pastikan backend aktif.';
           errorAlert.classList.remove('hidden');
           loginBtn.disabled = false;
           loginBtn.innerHTML = '<span>Otentikasi &amp; Buka Sesi</span>';

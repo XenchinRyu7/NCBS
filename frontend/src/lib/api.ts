@@ -1,7 +1,7 @@
 export const BACKEND_URL =
   import.meta.env.BACKEND_URL ||
   (typeof process !== 'undefined' && process.env.BACKEND_URL) ||
-  'http://localhost:8080';
+  '';
 
 export interface TokenResponse {
   access_token: string;

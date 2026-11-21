@@ -209,7 +209,7 @@ if (tokenCookie) {
           <ThemeToggle />
 
           <a
-            href="http://localhost:8080/docs"
+            href="/docs"
             target="_blank"
             class="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-card-foreground hover:bg-muted transition flex items-center gap-1 shadow-sm"
           >
@@ -814,7 +814,7 @@ if (tokenCookie) {
       async function loadStatement(accNo) {
         const account = accNo || currentUser?.accounts?.[0]?.account_number || '5240301001';
         try {
-          const res = await fetch(`http://localhost:8080/v1/accounts/${account}/statement`, {
+          const res = await fetch(`/v1/accounts/${account}/statement`, {
             headers: { 'Authorization': `Bearer ${activeToken}` },
           });
           const json = await res.json();
@@ -848,7 +848,7 @@ if (tokenCookie) {
 
       async function loadTrialBalance() {
         try {
-          const res = await fetch('http://localhost:8080/v1/ledger/trial-balance', {
+          const res = await fetch('/v1/ledger/trial-balance', {
             headers: { 'Authorization': `Bearer ${activeToken}` },
           });
           const json = await res.json();
@@ -862,7 +862,7 @@ if (tokenCookie) {
 
       async function loadAuditLogs() {
         try {
-          const res = await fetch('http://localhost:8080/v1/audit-logs', {
+          const res = await fetch('/v1/audit-logs', {
             headers: { 'Authorization': `Bearer ${activeToken}` },
           });
           const json = await res.json();
@@ -907,7 +907,7 @@ if (tokenCookie) {
         }
 
         try {
-          const res = await fetch('http://localhost:8080/v1/transactions/transfer', {
+          const res = await fetch('/v1/transactions/transfer', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -951,7 +951,7 @@ if (tokenCookie) {
         const sourceAcc = currentUser?.accounts?.[0]?.account_number || '5240301001';
 
         try {
-          const res = await fetch(`http://localhost:8080/v1/virtual-accounts/${vaNo}/pay`, {
+          const res = await fetch(`/v1/virtual-accounts/${vaNo}/pay`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -981,7 +981,7 @@ if (tokenCookie) {
         const amount = Number(document.getElementById('teller-amount-input').value);
 
         try {
-          const res = await fetch('http://localhost:8080/v1/transactions/cash', {
+          const res = await fetch('/v1/transactions/cash', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1009,7 +1009,7 @@ if (tokenCookie) {
         const reason = document.getElementById('cs-reason').value;
 
         try {
-          const res = await fetch(`http://localhost:8080/v1/accounts/${accNo}/unblock-pin`, {
+          const res = await fetch(`/v1/accounts/${accNo}/unblock-pin`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

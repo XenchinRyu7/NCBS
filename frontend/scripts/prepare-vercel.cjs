@@ -9,9 +9,34 @@ const repoRootDir = path.resolve(frontendDir, '..');
 const frontendOutput = path.join(frontendDir, '.vercel', 'output');
 const rootOutput = path.join(repoRootDir, '.vercel', 'output');
 
-console.log('[prepare-vercel] Checking Build Output API v3 directories...');
+console.log('[prepare-vercel] Initializing Vercel Build Output API v3 preparation...');
 
-// 1. If frontend/.vercel/output exists and we can access repoRootDir, copy to root .vercel/output
+// Helper: replace all symlinks with actual physical copies
+function replaceSymlinksWithRealFiles(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    try {
+      if (entry.isSymbolicLink()) {
+        const realTarget = fs.realpathSync(fullPath);
+        fs.unlinkSync(fullPath);
+        const stat = fs.statSync(realTarget);
+        if (stat.isDirectory()) {
+          fs.cpSync(realTarget, fullPath, { recursive: true });
+        } else {
+          fs.copyFileSync(realTarget, fullPath);
+        }
+      } else if (entry.isDirectory()) {
+        replaceSymlinksWithRealFiles(fullPath);
+      }
+    } catch (err) {
+      // Continue on any unresolvable reference
+    }
+  }
+}
+
+// 1. If frontend/.vercel/output exists and we can access repoRootDir, sync to root .vercel/output
 if (fs.existsSync(frontendOutput)) {
   try {
     fs.rmSync(rootOutput, { recursive: true, force: true });
@@ -19,11 +44,43 @@ if (fs.existsSync(frontendOutput)) {
     fs.cpSync(frontendOutput, rootOutput, { recursive: true });
     console.log('[prepare-vercel] ✓ Synced Build Output API v3 to root .vercel/output');
   } catch (err) {
-    console.log('[prepare-vercel] Note: Could not sync to repo root (isolated build context):', err.message);
+    console.log('[prepare-vercel] Note: Could not sync to repo root:', err.message);
   }
 }
 
-// 2. Inject API Gateway rewrites into all discovered config.json
+// 2. Resolve all pnpm absolute symlinks in functions to physical directories
+const functionDirs = [
+  path.join(rootOutput, 'functions'),
+  path.join(frontendOutput, 'functions'),
+];
+
+for (const fDir of functionDirs) {
+  if (fs.existsSync(fDir)) {
+    const funcs = fs.readdirSync(fDir, { withFileTypes: true });
+    for (const f of funcs) {
+      if (f.isDirectory() && f.name.endsWith('.func')) {
+        const funcPath = path.join(fDir, f.name);
+        replaceSymlinksWithRealFiles(funcPath);
+        console.log(`[prepare-vercel] ✓ Dereferenced all symlinks inside ${f.name}`);
+
+        // Set stable LTS Node.js runtime (nodejs20.x) in .vc-config.json
+        const vcConfigFile = path.join(funcPath, '.vc-config.json');
+        if (fs.existsSync(vcConfigFile)) {
+          try {
+            const vcConfig = JSON.parse(fs.readFileSync(vcConfigFile, 'utf8'));
+            vcConfig.runtime = 'nodejs20.x';
+            fs.writeFileSync(vcConfigFile, JSON.stringify(vcConfig, null, 2));
+            console.log(`[prepare-vercel] ✓ Set runtime to nodejs20.x in ${vcConfigFile}`);
+          } catch (e) {
+            console.warn('[prepare-vercel] Could not patch .vc-config.json:', e.message);
+          }
+        }
+      }
+    }
+  }
+}
+
+// 3. Inject API Gateway rewrites into all discovered config.json
 const targets = [
   path.join(rootOutput, 'config.json'),
   path.join(frontendOutput, 'config.json'),

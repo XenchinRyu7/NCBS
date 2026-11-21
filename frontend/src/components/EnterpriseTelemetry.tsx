@@ -123,7 +123,7 @@ export const EnterpriseTelemetry: React.FC<EnterpriseTelemetryProps> = ({
             type="button"
             onClick={handleAuditVerify}
             disabled={isVerifying}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground hover:bg-muted transition cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground hover:bg-muted transition cursor-pointer shadow-sm"
           >
             <RefreshCw className={`h-3.5 w-3.5 text-primary ${isVerifying ? 'animate-spin' : ''}`} />
             <span>{isVerifying ? 'Verifikasi...' : 'Verifikasi Ledger Invariant'}</span>

@@ -92,7 +92,7 @@ if (tokenCookie) {
           <button
             onclick="switchTab('overview')"
             id="tab-btn-overview"
-            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-foreground bg-secondary font-medium transition cursor-pointer"
+            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 bg-primary/15 text-primary border border-primary/30 font-semibold transition cursor-pointer"
           >
             <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             Ringkasan Akun
@@ -101,7 +101,7 @@ if (tokenCookie) {
           <button
             onclick="switchTab('ledger')"
             id="tab-btn-ledger"
-            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-secondary/50 hover:text-foreground font-medium transition cursor-pointer"
+            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground font-medium transition cursor-pointer"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
             Jurnal Mutasi
@@ -110,7 +110,7 @@ if (tokenCookie) {
           <button
             onclick="switchTab('transfer')"
             id="tab-btn-transfer"
-            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-secondary/50 hover:text-foreground font-medium transition cursor-pointer"
+            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground font-medium transition cursor-pointer"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             Transfer Dana
@@ -119,7 +119,7 @@ if (tokenCookie) {
           <button
             onclick="switchTab('virtual-accounts')"
             id="tab-btn-virtual-accounts"
-            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-secondary/50 hover:text-foreground font-medium transition cursor-pointer"
+            class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground font-medium transition cursor-pointer"
           >
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             Virtual Accounts
@@ -131,7 +131,7 @@ if (tokenCookie) {
             <button
               onclick="switchTab('branch')"
               id="tab-btn-branch"
-              class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-secondary/50 hover:text-foreground font-medium transition mt-1 cursor-pointer"
+              class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground font-medium transition mt-1 cursor-pointer"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
               Teller &amp; CS Desk
@@ -144,7 +144,7 @@ if (tokenCookie) {
             <button
               onclick="switchTab('audit')"
               id="tab-btn-audit"
-              class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-secondary/50 hover:text-foreground font-medium transition mt-1 cursor-pointer"
+              class="tab-btn w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground hover:bg-muted/60 hover:text-foreground font-medium transition mt-1 cursor-pointer"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
               Trial Balance &amp; OJK
@@ -171,7 +171,7 @@ if (tokenCookie) {
 
         <button
           onclick="logout()"
-          class="w-full rounded-lg border border-border bg-secondary py-1.5 text-[11px] font-semibold text-secondary-foreground hover:bg-destructive/20 hover:text-destructive hover:border-destructive/30 transition text-center cursor-pointer"
+          class="w-full rounded-lg border border-border bg-card py-1.5 text-[11px] font-semibold text-card-foreground hover:bg-destructive/20 hover:text-destructive hover:border-destructive/30 transition text-center cursor-pointer"
         >
           Akhiri Sesi (Keluar)
         </button>
@@ -211,7 +211,7 @@ if (tokenCookie) {
           <a
             href="http://localhost:8080/docs"
             target="_blank"
-            class="rounded-lg border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition flex items-center gap-1"
+            class="rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-card-foreground hover:bg-muted transition flex items-center gap-1 shadow-sm"
           >
             <span class="hidden sm:inline">API</span> Docs
           </a>
@@ -263,10 +263,10 @@ if (tokenCookie) {
             <button onclick="switchTab('transfer')" class="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110 shadow-sm transition cursor-pointer">
               Transfer Dana
             </button>
-            <button onclick="switchTab('virtual-accounts')" class="rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground hover:bg-muted transition cursor-pointer">
+            <button onclick="switchTab('virtual-accounts')" class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground hover:bg-muted transition cursor-pointer">
               Bayar / Kelola VA
             </button>
-            <button onclick="switchTab('ledger')" class="rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground hover:bg-muted transition cursor-pointer">
+            <button onclick="switchTab('ledger')" class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-card-foreground hover:bg-muted transition cursor-pointer">
               Lihat Riwayat Mutasi
             </button>
           </div>
@@ -284,7 +284,7 @@ if (tokenCookie) {
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="border-b border-border bg-muted/30 font-mono text-muted-foreground text-[11px]">
+                <thead class="border-b border-border bg-muted/50 font-mono text-card-foreground font-semibold text-[11px]">
                   <tr>
                     <th class="p-3">WAKTU</th>
                     <th class="p-3">KETERANGAN</th>
@@ -315,7 +315,7 @@ if (tokenCookie) {
               </div>
               <button
                 onclick="loadStatement()"
-                class="rounded-lg border border-border bg-secondary px-3 py-1 text-xs text-secondary-foreground hover:bg-muted transition font-mono cursor-pointer"
+                class="rounded-lg border border-border bg-card px-3 py-1 text-xs text-card-foreground hover:bg-muted transition font-mono font-semibold cursor-pointer shadow-sm"
               >
                 Refresh Mutasi
               </button>
@@ -323,7 +323,7 @@ if (tokenCookie) {
 
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="border-b border-border bg-muted/40 font-mono text-muted-foreground text-[11px]">
+                <thead class="border-b border-border bg-muted/50 font-mono text-card-foreground font-semibold text-[11px]">
                   <tr>
                     <th class="p-3.5">WAKTU &bull; TIMESTAMP</th>
                     <th class="p-3.5">KETERANGAN / NARRATION</th>
@@ -369,7 +369,7 @@ if (tokenCookie) {
                   <select
                     id="tf-channel-select"
                     onchange="onChannelChange()"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none cursor-pointer"
                   >
                     <option value="INTRABANK">INTRABANK (Sesama Bank — Fee Rp 0)</option>
                     <option value="BI_FAST">BI-FAST (Antar Bank — Fee Rp 2.500)</option>
@@ -386,7 +386,7 @@ if (tokenCookie) {
                   id="tf-dest-acc"
                   required
                   placeholder="Contoh: 5240302002 atau nomor rekening bank lain"
-                  class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                  class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -397,7 +397,7 @@ if (tokenCookie) {
                     type="text"
                     id="tf-ext-bank-code"
                     placeholder="BMRIIDJA (Bank Mandiri)"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
@@ -406,7 +406,7 @@ if (tokenCookie) {
                     type="text"
                     id="tf-ext-acc-name"
                     placeholder="Nama penerima di bank lain"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
               </div>
@@ -418,7 +418,7 @@ if (tokenCookie) {
                   id="tf-amount-input"
                   required
                   placeholder="5000000"
-                  class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                  class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -430,7 +430,7 @@ if (tokenCookie) {
                   required
                   maxlength="6"
                   placeholder="••••••"
-                  class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
+                  class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
                 />
               </div>
 
@@ -470,7 +470,7 @@ if (tokenCookie) {
                     id="va-pay-no-input"
                     required
                     placeholder="88000081290001001"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
@@ -481,7 +481,7 @@ if (tokenCookie) {
                     required
                     maxlength="6"
                     placeholder="••••••"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
                   />
                 </div>
                 <button
@@ -508,7 +508,7 @@ if (tokenCookie) {
                     id="va-cust-name-input"
                     required
                     placeholder="Contoh: Budi Santoso"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
@@ -518,7 +518,7 @@ if (tokenCookie) {
                     id="va-bill-amount-input"
                     required
                     placeholder="1250000"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
@@ -527,7 +527,7 @@ if (tokenCookie) {
                     type="text"
                     id="va-desc-input"
                     placeholder="Invoice #INV-2026-001"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
                 <button
@@ -562,14 +562,14 @@ if (tokenCookie) {
                     id="teller-acc-input"
                     required
                     placeholder="5240301001"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-muted-foreground pb-1">Operasi Kas</label>
                   <select
                     id="teller-op-select"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none cursor-pointer"
                   >
                     <option value="DEPOSIT">SETOR TUNAI (DEPOSIT)</option>
                     <option value="WITHDRAWAL">TARIK TUNAI (WITHDRAWAL)</option>
@@ -582,7 +582,7 @@ if (tokenCookie) {
                     id="teller-amount-input"
                     required
                     placeholder="10000000"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <button
@@ -610,7 +610,7 @@ if (tokenCookie) {
                     id="cs-unblock-acc"
                     required
                     placeholder="5240301001"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
@@ -621,7 +621,7 @@ if (tokenCookie) {
                     required
                     maxlength="6"
                     placeholder="123456"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground font-mono focus:border-primary focus:outline-none tracking-widest"
                   />
                 </div>
                 <div>
@@ -630,7 +630,7 @@ if (tokenCookie) {
                     type="text"
                     id="cs-reason"
                     value="Verifikasi KTP &amp; Biometrik di Cabang"
-                    class="w-full rounded-xl border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
+                    class="w-full rounded-xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
                 <button
@@ -684,7 +684,7 @@ if (tokenCookie) {
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
-                <thead class="border-b border-border bg-muted/40 font-mono text-muted-foreground text-[11px]">
+                <thead class="border-b border-border bg-muted/50 font-mono text-card-foreground font-semibold text-[11px]">
                   <tr>
                     <th class="p-3">WAKTU</th>
                     <th class="p-3">AKSI</th>
@@ -723,7 +723,7 @@ if (tokenCookie) {
       function switchTab(tabId) {
         document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(btn => {
-          btn.classList.remove('bg-secondary', 'text-foreground');
+          btn.classList.remove('bg-primary/15', 'text-primary', 'border', 'border-primary/30', 'font-semibold');
           btn.classList.add('text-muted-foreground');
         });
 
@@ -732,7 +732,7 @@ if (tokenCookie) {
         if (activePane) activePane.classList.remove('hidden');
         if (activeBtn) {
           activeBtn.classList.remove('text-muted-foreground');
-          activeBtn.classList.add('bg-secondary', 'text-foreground');
+          activeBtn.classList.add('bg-primary/15', 'text-primary', 'border', 'border-primary/30', 'font-semibold');
         }
 
         const titles = {
